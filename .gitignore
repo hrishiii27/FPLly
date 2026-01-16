@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.local
+
+# Build outputs
+frontend/dist/
+*.egg-info/
+
+# Logs
+*.log
+server.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ML models (can be regenerated)
+*.pkl
+*.joblib
+
+# Artifacts
+.gemini/

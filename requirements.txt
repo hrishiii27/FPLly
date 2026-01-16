@@ -1,0 +1,13 @@
+requests
+pandas
+numpy
+flask
+flask-cors
+pytesseract
+Pillow
+fuzzywuzzy
+python-Levenshtein
+scikit-learn
+easyocr
+xgboost
+certifi
