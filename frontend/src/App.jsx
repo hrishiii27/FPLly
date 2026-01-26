@@ -188,6 +188,15 @@ function App() {
 
 // Simple Dashboard Component for the "Home" tab
 function DashboardView({ status, setActiveTab }) {
+  const [dashData, setDashData] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then(res => res.json())
+      .then(data => setDashData(data))
+      .catch(err => console.error('Dashboard fetch failed:', err))
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* Quick Stats Grid */}
@@ -195,29 +204,29 @@ function DashboardView({ status, setActiveTab }) {
         <DashboardCard
           icon="⚡"
           label="Next Deadline"
-          value={`GW${status?.next_gw}`}
-          sub="Sat 11:00 AM"
+          value={`GW${dashData?.next_gw || status?.next_gw || '...'}`}
+          sub="Check FPL for exact time"
           color="blue"
         />
         <DashboardCard
           icon="🤖"
           label="AI Confidence"
-          value="92.4%"
+          value={`${dashData?.ai_confidence || 92.4}%`}
           sub="Based on 5 seasons"
           color="purple"
         />
         <DashboardCard
           icon="🔥"
           label="Player in Form"
-          value="Palmer"
-          sub="12.4 form rating"
+          value={dashData?.top_form?.name || 'Loading...'}
+          sub={dashData?.top_form ? `${dashData.top_form.form} form rating` : '...'}
           color="pink"
         />
         <DashboardCard
           icon="💎"
           label="Top Differential"
-          value="Kudus"
-          sub="3.2% ownership"
+          value={dashData?.top_differential?.name || 'Loading...'}
+          sub={dashData?.top_differential ? `${dashData.top_differential.ownership.toFixed(1)}% owned` : '...'}
           color="emerald"
         />
       </div>
@@ -237,11 +246,17 @@ function DashboardView({ status, setActiveTab }) {
 
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm hover:border-purple-500/50 transition-colors cursor-pointer" onClick={() => setActiveTab('predictions')}>
           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">🔎 Scout Players</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">Explore 600+ player predictions for GW{status?.next_gw} sorted by xPts.</p>
-          <div className="flex gap-2">
-            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs font-medium">Haaland (8.4)</span>
-            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs font-medium">Salah (7.9)</span>
-            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs font-medium">Saka (6.2)</span>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">Explore 600+ player predictions for GW{dashData?.next_gw || status?.next_gw} sorted by xPts.</p>
+          <div className="flex gap-2 flex-wrap">
+            {dashData?.top_predictions?.map((p, i) => (
+              <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs font-medium">
+                {p.name} ({p.xpts})
+              </span>
+            )) || (
+                <>
+                  <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs font-medium">Loading...</span>
+                </>
+              )}
           </div>
         </div>
       </div>
