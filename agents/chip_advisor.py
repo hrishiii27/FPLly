@@ -234,6 +234,94 @@ class ChipAdvisor:
         
         return scores
     
+    def evaluate_chips_for_squad(self, squad_ids: list[int], xi_ids: list[int], prediction_agent) -> list[dict]:
+        """Evaluate chips specifically for the user's uploaded squad (starters and bench)."""
+        if not self.gw_analyses:
+            self.analyze_gameweeks()
+            
+        suggestions = []
+        current_gw = self.data.next_gw
+        
+        # Evaluate Bench Boost using actual bench from Best XI
+        bench_ids = [pid for pid in squad_ids if pid not in xi_ids]
+        bench_preds = [prediction_agent.predictions[pid] for pid in bench_ids if pid in prediction_agent.predictions]
+        bench_pts = sum(p.expected_points for p in bench_preds)
+        
+        bb_score = min(95, int((bench_pts / 12.0) * 80))
+        if len(squad_ids) >= 14 and bb_score >= 40:
+            suggestions.append({
+                "chip": "Bench Boost",
+                "score": bb_score,
+                "reason": "Calculated based on your specific uploaded bench xPts.",
+                "for_your_team": f"Your bench has ~{bench_pts:.1f} xPts - {'Excellent for BB!' if bench_pts > 12 else 'Good for BB!' if bench_pts > 8 else 'Consider strengthening bench'}"
+            })
+                
+        # Evaluate Triple Captain using Best XI captain
+        valid_squad = [prediction_agent.predictions[pid] for pid in squad_ids if pid in prediction_agent.predictions]
+        if valid_squad:
+            best_cap = max(valid_squad, key=lambda p: p.expected_points)
+            tc_score = min(95, int((best_cap.expected_points / 8.0) * 80))
+            if tc_score >= 40:
+                suggestions.append({
+                    "chip": "Triple Captain",
+                    "score": tc_score,
+                    "reason": "Calculated based on your highest predicted player.",
+                    "for_your_team": f"TC on {best_cap.player_name} ({best_cap.expected_points:.1f} xPts) yields ~{best_cap.expected_points*3:.1f} pts"
+                })
+            
+        # Squad-specific Wildcard / Free Hit Checks
+        current_analysis = self.gw_analyses.get(current_gw)
+        if current_analysis:
+            valid_squad = [prediction_agent.predictions[pid] for pid in squad_ids if pid in prediction_agent.predictions]
+            
+            # Wildcard logic based on squad health over next 5 GWs
+            weak_links = 0
+            for p in valid_squad:
+                if p.minutes_tag in ["Out", "Suspended"] or p.expected_points_next_5 < 10.0:
+                    weak_links += 1
+            
+            wc_global = current_analysis.chip_scores.get("wildcard", 0)
+            wc_squad = wc_global
+            
+            if weak_links >= 4:
+                wc_squad += 20
+            elif weak_links >= 3:
+                wc_squad += 10
+            elif weak_links <= 1:
+                wc_squad -= 20
+                
+            if wc_squad >= 60:
+                suggestions.append({
+                    "chip": "Wildcard",
+                    "score": min(95, int(wc_squad)),
+                    "reason": f"Data indicates {weak_links} players with poor 5-GW projections or flags in your squad.",
+                    "for_your_team": "Your team needs surgery. Restructure now to attack the upcoming fixture block."
+                })
+                
+            # Free Hit logic based on 1-GW projection
+            fh_global = current_analysis.chip_scores.get("free_hit", 0)
+            xi_preds = [prediction_agent.predictions[pid] for pid in xi_ids if pid in prediction_agent.predictions]
+            xi_pts = sum(p.expected_points for p in xi_preds)
+            if valid_squad and len(xi_preds) > 0:
+                best_cap = max(xi_preds, key=lambda p: p.expected_points)
+                xi_pts += best_cap.expected_points # Captain double
+            
+            fh_squad = fh_global
+            if xi_pts < 45.0:
+                fh_squad += 15
+            elif xi_pts > 55.0:
+                fh_squad -= 15
+                
+            if fh_squad >= 60:
+                suggestions.append({
+                    "chip": "Free Hit",
+                    "score": min(95, int(fh_squad)),
+                    "reason": f"Your starting XI is only projected for {xi_pts:.1f} points this week.",
+                    "for_your_team": "Consider fielding an optimal one-week dream team to navigate this trough."
+                })
+            
+        return sorted(suggestions, key=lambda x: x["score"], reverse=True)
+
     def get_chip_recommendations(self) -> list[ChipRecommendation]:
         """Get detailed recommendations for all chips."""
         if not self.gw_analyses:

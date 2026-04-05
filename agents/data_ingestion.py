@@ -136,7 +136,37 @@ class FPLDataIngestion:
         self._parse_fixtures(fixtures_data)
         print(f"  ✓ Loaded {len(self.fixtures)} fixtures")
         
+        self._snapshot_price_history()
+        
         print("✅ Data ingestion complete!")
+
+    def _snapshot_price_history(self) -> None:
+        """Save a daily snapshot of player prices and ownership to the database."""
+        try:
+            from models import db, PlayerPriceHistory
+            from flask import current_app
+            
+            if current_app:
+                from datetime import datetime
+                today = datetime.utcnow().date()
+                
+                # Check for existing snapshot today
+                recent_snap = PlayerPriceHistory.query.first()
+                if recent_snap and recent_snap.recorded_at.date() == today:
+                    return # Already snapped today
+                    
+                for p in self.players:
+                    history = PlayerPriceHistory(
+                        player_id=p.id,
+                        gameweek=self.current_gw,
+                        price=p.price,
+                        selected_by_percent=p.selected_by_percent
+                    )
+                    db.session.add(history)
+                db.session.commit()
+                print("  ✓ Saved daily price & ownership snapshots successfully")
+        except Exception as e:
+            print(f"  ⚠️ Could not save price history to DB: {e}")
     
     def _parse_teams(self, teams_data: list) -> None:
         """Parse team data from API response."""

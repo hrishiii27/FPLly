@@ -5,6 +5,7 @@ Serves predictions and recommendations via REST API.
 
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+from flask_caching import Cache
 import sys
 import os
 
@@ -26,15 +27,30 @@ from agents.differential_finder import DifferentialFinder
 from agents.ml_predictor import MLPredictor
 from agents.scout_chat import ScoutChatAgent
 from agents.league_analyzer import LeagueAnalyzer
+from agents.live_tracker import LiveTrackerAgent
 
 # Get the web folder path
 WEB_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'web')
 
+from models import db, User, SavedSquad, PlayerPriceHistory
+
 app = Flask(__name__, static_folder=WEB_FOLDER, static_url_path='')
 CORS(app)
+cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 3600})
+cache.init_app(app)
+
+# Configure SQLite DB
+db_path = os.path.join(os.path.dirname(__file__), 'fplly.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 
 # Global agents (initialized on first request)
-agents = {}
+from typing import Any, Dict
+agents: Dict[str, Any] = {}
 
 
 def initialize_agents():
@@ -112,7 +128,11 @@ def initialize_agents():
     scout_chat = ScoutChatAgent(agents)
     agents['chat'] = scout_chat
     
-    print("✅ FPL-Agent system ready!")
+    # Live Tracker
+    tracker = LiveTrackerAgent(data_agent)
+    agents['live_tracker'] = tracker
+    
+    print("✅ All agents ready!")
 
 
 @app.before_request
@@ -162,6 +182,7 @@ def api_league():
 
 
 @app.route('/api/dashboard')
+@cache.cached(query_string=True)
 def api_dashboard():
     """Get dynamic dashboard data for widgets."""
     data_agent = agents.get('data')
@@ -231,6 +252,7 @@ def javascript():
 
 
 @app.route('/api/status')
+@cache.cached(query_string=True)
 def api_status():
     """Get system status."""
     data = agents.get('data')
@@ -244,6 +266,7 @@ def api_status():
 
 
 @app.route('/api/predictions')
+@cache.cached(query_string=True)
 def api_predictions():
     """Get all player predictions."""
     prediction_agent = agents.get('predictions')
@@ -273,6 +296,7 @@ def api_predictions():
 
 
 @app.route('/api/captain')
+@cache.cached(query_string=True)
 def api_captain():
     """Get captain recommendations."""
     prediction_agent = agents.get('predictions')
@@ -349,7 +373,7 @@ def api_transfers():
                 "price": rec.player_in_price,
                 "xPts": rec.player_in_xpts
             },
-            "points_gain": rec.points_gain,
+            "points_gain": rec.points_gain_next_5,
             "price_change": rec.price_change,
             "explanation": explainer.to_dict(explanation)
         })
@@ -362,6 +386,7 @@ def api_transfers():
 
 
 @app.route('/api/optimal-team')
+@cache.cached(query_string=True)
 def api_optimal_team():
     """Get an optimal team from scratch."""
     budget = request.args.get('budget', 100.0, type=float)
@@ -413,6 +438,7 @@ def api_optimal_team():
 
 
 @app.route('/api/fixtures')
+@cache.cached(query_string=True)
 def api_fixtures():
     """Get fixture analysis for teams."""
     fixture_agent = agents.get('fixtures')
@@ -429,6 +455,7 @@ def api_fixtures():
 
 
 @app.route('/api/player/<int:player_id>')
+@cache.cached(query_string=True)
 def api_player(player_id: int):
     """Get detailed info for a specific player."""
     prediction_agent = agents.get('predictions')
@@ -517,11 +544,13 @@ def api_upload_team():
         total_team_value = 0
         
         for d in detected:
+            pred = None
             if d.matched and d.player_id in prediction_agent.predictions:
                 pred = prediction_agent.predictions[d.player_id]
                 d.expected_points = pred.expected_points
                 detected_ids.append(d.player_id)
                 total_team_value += d.price
+            
             detected_list.append({
                 "raw_text": d.raw_text,
                 "name": d.matched_name if d.matched else d.raw_text,
@@ -531,7 +560,9 @@ def api_upload_team():
                 "position": d.position,
                 "team": d.team,
                 "price": d.price,
-                "xPts": d.expected_points
+                "xPts": d.expected_points,
+                "gw_label": getattr(pred, 'gw_label', None) if pred else None,
+                "fixture": getattr(pred, 'fixture_info', 'No info') if pred else "No info"
             })
         
         # Get free transfers from request (default 1)
@@ -573,7 +604,7 @@ def api_upload_team():
                 transfer_num = i + 1
                 is_free = transfer_num <= free_transfers
                 hit_cost = 0 if is_free else 4
-                net_gain = t.points_gain - hit_cost
+                net_gain = t.points_gain_next_5 - hit_cost
                 price_feasible = t.price_change <= bank
                 
                 transfer_analysis.append({
@@ -591,7 +622,7 @@ def api_upload_team():
                         "price": t.player_in_price,
                         "xPts": round(t.player_in_xpts, 2)
                     },
-                    "points_gain": round(t.points_gain, 2),
+                    "points_gain": round(t.points_gain_next_5, 2),
                     "price_change": t.price_change,
                     "is_free": is_free,
                     "hit_cost": hit_cost,
@@ -603,7 +634,7 @@ def api_upload_team():
             # Show all analyzed transfers (both free and hit)
             transfers = transfer_analysis
             
-            # Better hit advice based on actual analysis
+            # Better hit advice based on actual analysis (Using 5GW horizon)
             free_gains = sum(t["points_gain"] for t in transfer_analysis[:free_transfers])
             
             # Find hits that are actually worth it (net_gain > 0 means gain exceeds -4 cost)
@@ -713,47 +744,12 @@ def api_upload_team():
         chip_suggestions = []
         
         if len(detected_ids) >= 11:
-            # Analyze bench (players outside best XI)
-            xi_ids = [p["id"] for p in best_xi["players"]] if best_xi else []
-            bench_xpts = sum(
-                d.expected_points for d in detected 
-                if d.matched and d.player_id not in xi_ids
-            )
-            
             if 'chips' not in agents:
                 agents['chips'] = ChipAdvisor(agents['data'])
                 agents['chips'].analyze_gameweeks(4)
-            
-            chip_data = agents['chips'].to_dict()
-            
-            for rec in chip_data.get('recommendations', []):
-                if rec['recommended_gw'] == agents['data'].next_gw:
-                    chip_name = rec['chip']
-                    score = rec['score']
-                    
-                    if chip_name == "bench_boost" and score >= 40:
-                        chip_suggestions.append({
-                            "chip": "Bench Boost",
-                            "score": score,
-                            "reason": rec['reason'],
-                            "for_your_team": f"Your bench has ~{bench_xpts:.1f} xPts - {'Good for BB!' if bench_xpts > 8 else 'Consider strengthening bench'}"
-                        })
-                    elif chip_name == "triple_captain" and score >= 40:
-                        cap_name = best_xi["captain"] if best_xi else "Unknown"
-                        cap_xpts = max(d.expected_points for d in detected if d.matched) if detected else 0
-                        chip_suggestions.append({
-                            "chip": "Triple Captain",
-                            "score": score,
-                            "reason": rec['reason'],
-                            "for_your_team": f"TC on {cap_name} ({cap_xpts:.1f} xPts) could yield ~{cap_xpts*3:.1f} pts"
-                        })
-                    elif chip_name == "free_hit" and score >= 60:
-                        chip_suggestions.append({
-                            "chip": "Free Hit",
-                            "score": score,
-                            "reason": rec['reason'],
-                            "for_your_team": "Build a one-week dream team for this tricky GW"
-                        })
+                
+            xi_ids = [p["id"] for p in best_xi["players"]] if best_xi else []
+            chip_suggestions = agents['chips'].evaluate_chips_for_squad(detected_ids, xi_ids, prediction_agent)
         
         return jsonify({
             "gw": agents['data'].next_gw,
@@ -812,6 +808,7 @@ def api_historical(player_name: str):
 
 
 @app.route('/api/overperformers')
+@cache.cached(query_string=True)
 def api_overperformers():
     """Get top xG overperformers."""
     if 'historical' not in agents:
@@ -829,6 +826,7 @@ def api_overperformers():
 
 
 @app.route('/api/chips')
+@cache.cached(query_string=True)
 def api_chips():
     """Get chip strategy recommendations."""
     if 'chips' not in agents:
@@ -839,6 +837,7 @@ def api_chips():
 
 
 @app.route('/api/ownership')
+@cache.cached(query_string=True)
 def api_ownership():
     """Get ownership analysis."""
     if 'ownership' not in agents:
@@ -849,6 +848,7 @@ def api_ownership():
 
 
 @app.route('/api/differentials')
+@cache.cached(query_string=True)
 def api_differentials():
     """Get differential player picks."""
     if 'differentials' not in agents:
@@ -859,6 +859,7 @@ def api_differentials():
 
 
 @app.route('/api/ml-predictions')
+@cache.cached(query_string=True)
 def api_ml_predictions():
     """Get ML-based predictions."""
     if 'ml' not in agents:
@@ -873,6 +874,20 @@ def api_ml_predictions():
     return jsonify(agents['ml'].to_dict(ml_preds))
 
 
+@app.route('/api/live-rank/<int:fpl_id>')
+def api_live_rank(fpl_id):
+    """Get live points and rank for an authenticated user."""
+    # Ensure initialized (lazy load in case it wasn't)
+    if 'live_tracker' not in agents:
+        if 'data' not in agents:
+            initialize_agents()
+        agents['live_tracker'] = LiveTrackerAgent(agents['data'])
+        
+    result = agents['live_tracker'].get_live_team_points(fpl_id)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify(result)
+
 if __name__ == '__main__':
     print("=" * 50)
     print("🎮 FPL-Agent API Server")
@@ -883,7 +898,7 @@ if __name__ == '__main__':
     initialize_agents()
     
     print("")
-    print("Starting server at http://localhost:5050")
+    print("Starting server...")
     print("")
     print("Endpoints:")
     print("  GET  /api/status         - System status")

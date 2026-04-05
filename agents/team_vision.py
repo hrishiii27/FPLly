@@ -129,8 +129,14 @@ class TeamVisionAgent:
                           'bench', 'captain', 'vice', 'chip', 'total', 'free',
                           'wildcard', 'hit', 'deadline', 'average', 'rank',
                           'manager', 'overall', 'squad', 'make', 'view',
-                          'pick', 'team', 'gw', 'pts', 'used']
+                          'pick', 'team', 'gw', 'pts', 'used', 'selected',
+                          'fwd', 'def', 'mid', 'gkp', 'price', 'budget',
+                          'transfer', 'remaining', 'money', 'itb', 'squad']
             if any(word in text.lower() for word in skip_words):
+                continue
+            
+            # Skip opponent names with venue markers (e.g., "LEE (A)", "MUN (H)")
+            if re.search(r'\([HA]\)', text) or re.search(r'\s[HA]$', text):
                 continue
             
             # Clean up common OCR artifacts
@@ -165,7 +171,12 @@ class TeamVisionAgent:
         # Try fuzzy matching with multiple scorers
         result = process.extractOne(name, self.player_list, scorer=fuzz.token_set_ratio)
         
-        if result and result[1] >= threshold:
+        # Enforce higher threshold for short names to avoid team shorthand matches (e.g., "LEE")
+        min_threshold = threshold
+        if len(name) <= 4:
+            min_threshold = max(80, threshold + 10)
+            
+        if result and result[1] >= min_threshold:
             matched_name = result[0]
             player = self.player_names.get(matched_name.lower())
             

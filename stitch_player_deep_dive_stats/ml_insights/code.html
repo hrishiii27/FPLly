@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Kinetic Editorial | ML Performance Insights</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&amp;family=Manrope:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-dim": "#00663f",
+              "tertiary-container": "#ff909c",
+              "on-tertiary-container": "#68001e",
+              "secondary": "#007348",
+              "surface-container-low": "#fcf9f1",
+              "secondary-container": "#78fbb6",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#2b0090",
+              "tertiary-fixed-dim": "#ff7989",
+              "on-secondary-container": "#005e3a",
+              "surface-variant": "#ebe8df",
+              "surface-tint": "#6236ff",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#f0eee5",
+              "primary-container": "#a292ff",
+              "primary-fixed": "#a292ff",
+              "on-error-container": "#510017",
+              "error-dim": "#a70138",
+              "surface-dim": "#e5e2d9",
+              "surface-bright": "#fdffda",
+              "secondary-fixed-dim": "#69eca8",
+              "on-primary-container": "#220076",
+              "background": "#fdffda",
+              "on-background": "#383833",
+              "tertiary-fixed": "#ff909c",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#bbb9b3",
+              "surface": "#fdffda",
+              "on-secondary-fixed": "#00492c",
+              "inverse-surface": "#0e0e0b",
+              "tertiary": "#c31c45",
+              "inverse-primary": "#927dff",
+              "on-secondary-fixed-variant": "#006941",
+              "tertiary-dim": "#b1063a",
+              "surface-container": "#f6f3eb",
+              "on-primary-fixed": "#000000",
+              "outline": "#82807b",
+              "on-error": "#ffffff",
+              "on-tertiary-fixed": "#39000c",
+              "on-surface": "#383833",
+              "error-container": "#f74b6d",
+              "primary-fixed-dim": "#9581ff",
+              "on-secondary": "#ffffff",
+              "inverse-on-surface": "#9f9d97",
+              "surface-container-highest": "#ebe8df",
+              "primary": "#6236ff",
+              "on-tertiary-fixed-variant": "#780024",
+              "on-surface-variant": "#65645f",
+              "error": "#c12048",
+              "secondary-fixed": "#78fbb6",
+              "primary-dim": "#5621f3"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Manrope"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.grain-overlay {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDpBbZMimAHXo0_kgwRQHcd9ik4GIH9RRwYUJRt5WBiHiwMhbTdYfcAWE_LkIp9vP7TbMyT5J2WK2kzMqHOTYNsqFxsw6EozPM0PPw9RPu8EC7_RESU3SMTFrmGpeifQd0suODZVzvmYtlXkl6CxrzyJ_IBzwUl9KL96t8_ZkycuugBLkYooVZ4bcrOdml-QMBKpMaoNk1NWGttADj9e9TA_ADtLOVe7qQYENO4DHwLj2gQ_Lc-4x3GMgoWplgkGQ2h9LeDdK8PVgdU);
+    opacity: 0.03;
+    pointer-events: none
+    }
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem
+    }</style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky z-40 bg-[#fdffda] dark:bg-stone-950">
+<div class="flex justify-between items-center px-8 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="text-2xl font-black tracking-tighter text-[#383833] dark:text-[#fcf9f1] font-headline">
+                The Kinetic Editorial
+            </div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Analytics</a>
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Transfers</a>
+<a class="text-[#6236ff] dark:text-[#a292ff] font-bold border-b-2 border-[#6236ff] pb-1 transition-all" href="#">Predictions</a>
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Strategy</a>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface hover:text-primary cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface hover:text-primary cursor-pointer">settings</span>
+<img alt="Manager Profile" class="w-10 h-10 rounded-full border-2 border-surface-container-high" data-alt="Close up portrait of a professional manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXUbMuXrNdxQJWty2O-Zl-UNHxTXlwrj2ZBIjAtfADoxdksjvY_MeOTNwXwK2BlMIa_KRBrGZDFKFJ0R0G7qs2WVQkUJ1FowRXFzZ9CufKDH-Ib6B4AjlzKPbeM6Q-7ASw7oy2WZ1lz7PY290FNkXftQj04tWmKP1ch8Z7K33zlRkMKlq47-y6n30p2xy0s-UFvOnCLuC9gbI-d-yLiBU48Gqc09knH6kYRRdtmoQxNSmGcwyY9rKgKLAwzAtuXy5Q3xhc19CgSmJd"/>
+</div>
+</div>
+<div class="bg-[#f0eee5] dark:bg-stone-900 h-[1px] w-full"></div>
+</header>
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col h-screen w-64 fixed left-0 top-16 border-r border-[#f0eee5] dark:border-stone-800 bg-[#fcf9f1] dark:bg-stone-900 shadow-[20px_0_40px_rgba(56,56,51,0.03)] z-30">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">monitoring</span>
+</div>
+<div>
+<div class="font-headline text-on-surface font-bold text-sm">GW 24 Strategy</div>
+<div class="font-label text-xs uppercase tracking-widest text-outline">Rank: 12,402</div>
+</div>
+</div>
+<nav class="space-y-1">
+<div class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="font-label text-xs uppercase tracking-widest">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">groups</span>
+<span class="font-label text-xs uppercase tracking-widest">Squad Hub</span>
+</div>
+<div class="flex items-center gap-3 text-[#6236ff] dark:text-[#a292ff] font-bold bg-[#fdffda] dark:bg-stone-950 rounded-lg p-3 mx-2 translate-x-1 transition-transform duration-200">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label text-xs uppercase tracking-widest">Expert Intel</span>
+</div>
+<div class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">calendar_month</span>
+<span class="font-label text-xs uppercase tracking-widest">Fixture Ticker</span>
+</div>
+<div class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">forum</span>
+<span class="font-label text-xs uppercase tracking-widest">Community</span>
+</div>
+</nav>
+<div class="mt-8 px-2">
+<button class="w-full bg-primary text-on-primary rounded-full py-3 font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all scale-98 active:scale-95 shadow-lg shadow-primary/20">
+                        Optimize Team
+                    </button>
+</div>
+</div>
+<div class="mt-auto p-6 border-t border-surface-container-high">
+<div class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label text-xs uppercase tracking-widest">Support</span>
+</div>
+<div class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label text-xs uppercase tracking-widest">Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 lg:ml-64 p-8 pt-24 max-w-screen-2xl mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div class="max-w-2xl">
+<h1 class="font-headline text-5xl md:text-6xl font-black text-on-background tracking-tighter mb-4">
+                        Model Insights &amp; <span class="text-primary italic">Performance</span>
+</h1>
+<p class="font-body text-on-surface-variant text-lg leading-relaxed">
+                        Deep-dive analysis of our ensemble predictive models for Gameweek 24. Performance metrics are derived from a rolling 10-week historical validation set.
+                    </p>
+</div>
+<div class="flex gap-2 bg-surface-container-high p-1 rounded-full">
+<button class="px-6 py-2 bg-surface-container-lowest text-on-surface font-bold rounded-full shadow-sm text-sm">Validation</button>
+<button class="px-6 py-2 text-on-surface-variant font-medium hover:text-primary text-sm">Live Feed</button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="bento-grid">
+<!-- Performance Overview Card (Large) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0px_20px_40px_rgba(56,56,51,0.04)] relative overflow-hidden">
+<div class="grain-overlay absolute inset-0"></div>
+<div class="flex justify-between items-start mb-10 relative z-10">
+<div>
+<h3 class="font-headline text-2xl font-bold mb-1">Feature Importance</h3>
+<p class="font-label text-xs uppercase tracking-widest text-outline">Weight of Predictive Indicators</p>
+</div>
+<div class="flex items-center gap-2 text-secondary font-bold font-label">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>94.2% ACCURACY</span>
+</div>
+</div>
+<div class="space-y-6 relative z-10">
+<div class="space-y-2">
+<div class="flex justify-between font-label text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+<span>Recent xG Output</span>
+<span>0.88</span>
+</div>
+<div class="h-4 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-label text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+<span>Fixture Difficulty (FDR)</span>
+<span>0.74</span>
+</div>
+<div class="h-4 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container rounded-full" style="width: 74%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-label text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+<span>Away Performance Bias</span>
+<span>0.61</span>
+</div>
+<div class="h-4 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container rounded-full" style="width: 61%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-label text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+<span>Team Rotation Risk</span>
+<span>0.45</span>
+</div>
+<div class="h-4 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Model Stats Cards (Side Columns) -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 bg-primary text-on-primary rounded-xl p-8 relative overflow-hidden">
+<div class="absolute -top-10 -right-10 w-40 h-40 bg-on-primary/10 rounded-full blur-3xl"></div>
+<div class="relative z-10">
+<div class="font-label text-xs uppercase tracking-widest opacity-80 mb-2">Primary Architecture</div>
+<h3 class="font-headline text-3xl font-bold mb-8">Ensemble v4.2</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-on-primary/10 p-4 rounded-lg backdrop-blur-md">
+<div class="font-label text-[10px] uppercase tracking-tighter opacity-70 mb-1">R² Score</div>
+<div class="font-headline text-2xl font-bold">0.924</div>
+</div>
+<div class="bg-on-primary/10 p-4 rounded-lg backdrop-blur-md">
+<div class="font-label text-[10px] uppercase tracking-tighter opacity-70 mb-1">MAE</div>
+<div class="font-headline text-2xl font-bold">1.04</div>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<span class="text-xs font-body font-medium">Model Health: Robust</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Secondary Model Cards -->
+<div class="col-span-12 md:col-span-6 lg:col-span-3 bg-surface-container-high rounded-xl p-6 border border-outline-variant/10">
+<h4 class="font-headline text-lg font-bold mb-4">Random Forest</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+<span class="font-body text-sm text-on-surface-variant">R² Score</span>
+<span class="font-label font-bold text-primary">0.841</span>
+</div>
+<div class="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+<span class="font-body text-sm text-on-surface-variant">MAE</span>
+<span class="font-label font-bold text-on-surface">1.82</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body text-sm text-on-surface-variant">Status</span>
+<span class="bg-secondary/10 text-secondary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Stable</span>
+</div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-6 lg:col-span-3 bg-surface-container-high rounded-xl p-6 border border-outline-variant/10">
+<h4 class="font-headline text-lg font-bold mb-4">XGBoost Regressor</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+<span class="font-body text-sm text-on-surface-variant">R² Score</span>
+<span class="font-label font-bold text-primary">0.897</span>
+</div>
+<div class="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+<span class="font-body text-sm text-on-surface-variant">MAE</span>
+<span class="font-label font-bold text-on-surface">1.25</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body text-sm text-on-surface-variant">Status</span>
+<span class="bg-secondary/10 text-secondary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">High-Perf</span>
+</div>
+</div>
+</div>
+<!-- Predictions Confidence Card -->
+<div class="col-span-12 lg:col-span-6 bg-surface-container-lowest rounded-xl p-8 shadow-[0px_20px_40px_rgba(56,56,51,0.04)]">
+<div class="flex items-center gap-4 mb-8">
+<div class="p-3 bg-secondary-container rounded-lg">
+<span class="material-symbols-outlined text-on-secondary-container">query_stats</span>
+</div>
+<div>
+<h3 class="font-headline text-xl font-bold">Predictive Confidence</h3>
+<p class="font-label text-[10px] uppercase tracking-widest text-outline">Gameweek 24 Projections</p>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<div class="text-center p-4 rounded-xl bg-surface-container-high">
+<div class="font-headline text-3xl font-bold text-secondary mb-1">92%</div>
+<div class="font-label text-[10px] uppercase tracking-tighter text-on-surface-variant">Forwards</div>
+</div>
+<div class="text-center p-4 rounded-xl bg-surface-container-high">
+<div class="font-headline text-3xl font-bold text-primary mb-1">78%</div>
+<div class="font-label text-[10px] uppercase tracking-tighter text-on-surface-variant">Midfield</div>
+</div>
+<div class="text-center p-4 rounded-xl bg-surface-container-high">
+<div class="font-headline text-3xl font-bold text-tertiary mb-1">64%</div>
+<div class="font-label text-[10px] uppercase tracking-tighter text-on-surface-variant">Defenders</div>
+</div>
+</div>
+</div>
+<!-- Insight of the Day (Magazine Style) -->
+<div class="col-span-12 lg:col-span-6 bg-[#fdffda] border-l-8 border-primary rounded-xl p-8 relative overflow-hidden flex flex-col justify-center">
+<div class="grain-overlay absolute inset-0"></div>
+<span class="material-symbols-outlined text-primary-fixed-dim absolute top-4 right-4 text-6xl opacity-20 rotate-12">format_quote</span>
+<h4 class="font-label text-xs font-bold uppercase tracking-widest text-primary mb-3">Model Insight #824</h4>
+<p class="font-headline text-2xl font-bold leading-tight text-on-background relative z-10">
+                        "The data suggests an over-reliance on historical clean-sheet metrics. GW24 favor high-volume shooters over defensive accumulation."
+                    </p>
+<div class="mt-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-sm">drive_ai</span>
+</div>
+<span class="text-xs font-body font-bold text-on-surface italic">Lead Data Scientist - Kinetic Editorial</span>
+</div>
+</div>
+</div>
+<!-- Bottom Footer Area (Tonal Separation) -->
+<footer class="mt-20 py-12 border-t border-surface-container-high flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="flex items-center gap-4">
+<div class="text-xl font-black font-headline tracking-tighter text-on-surface">TKE.</div>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">© 2024 The Kinetic Editorial. All model data validated.</p>
+</div>
+<div class="flex gap-6">
+<a class="font-label text-[10px] uppercase tracking-widest font-bold text-primary hover:opacity-70" href="#">Privacy Policy</a>
+<a class="font-label text-[10px] uppercase tracking-widest font-bold text-primary hover:opacity-70" href="#">API Docs</a>
+<a class="font-label text-[10px] uppercase tracking-widest font-bold text-primary hover:opacity-70" href="#">Methodology</a>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

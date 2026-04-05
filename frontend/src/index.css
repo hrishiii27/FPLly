@@ -1,46 +1,149 @@
 @import "tailwindcss";
 
-/* Theme Variables */
-:root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --border: 240 5.9% 90%;
-    --ring: 262.1 83.3% 57.8%;
+@theme {
+  /* ── Primary: #6236FF ── */
+  --color-primary: #6236ff;
+  --color-primary-dim: #5621f3;
+  --color-primary-container: #a292ff;
+  --color-primary-fixed: #a292ff;
+  --color-primary-fixed-dim: #9581ff;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #220076;
+  --color-on-primary-fixed: #000000;
+  --color-on-primary-fixed-variant: #2b0090;
+  --color-inverse-primary: #927dff;
+
+  /* ── Secondary: #00A86B ── */
+  --color-secondary: #00a86b;
+  --color-secondary-dim: #008a57;
+  --color-secondary-container: #78fbb6;
+  --color-secondary-fixed: #78fbb6;
+  --color-secondary-fixed-dim: #5ce69e;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #005e3a;
+  --color-on-secondary-fixed: #00492c;
+  --color-on-secondary-fixed-variant: #007a4e;
+
+  /* ── Tertiary: #FF4D6D ── */
+  --color-tertiary: #d6275b;
+  --color-tertiary-dim: #b8103f;
+  --color-tertiary-container: #ff8fa0;
+  --color-tertiary-fixed: #ff8fa0;
+  --color-tertiary-fixed-dim: #ff7989;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #68001e;
+  --color-on-tertiary-fixed: #39000c;
+  --color-on-tertiary-fixed-variant: #780024;
+
+  /* ── Neutral / Surfaces: based on #F4F1EA ── */
+  --color-background: #f4f1ea;
+  --color-on-background: #1c1b18;
+  --color-surface: #f4f1ea;
+  --color-surface-bright: #faf8f2;
+  --color-surface-dim: #d8d5ce;
+  --color-surface-tint: #6236ff;
+  --color-surface-variant: #e6e3db;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f6ef;
+  --color-surface-container: #f0ede6;
+  --color-surface-container-high: #eae7e0;
+  --color-surface-container-highest: #e1ded7;
+  --color-on-surface: #1c1b18;
+  --color-on-surface-variant: #4a4944;
+  --color-inverse-surface: #31302c;
+  --color-inverse-on-surface: #f4f1ea;
+
+  /* ── Error ── */
+  --color-error: #c12048;
+  --color-error-dim: #a70138;
+  --color-error-container: #f74b6d;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #510017;
+
+  /* ── Outline ── */
+  --color-outline: #7a7873;
+  --color-outline-variant: #c8c5be;
+
+  /* ── Typography ── */
+  --font-headline: "Epilogue", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Space Grotesk", sans-serif;
 }
 
+/* ══════════════════════════════════════════════════
+   Dark Mode Overrides — Pitch Perfect Editorial
+   ══════════════════════════════════════════════════ */
 .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 7%;
-    --card-foreground: 0 0% 98%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --border: 240 3.7% 20%;
-    --ring: 262.1 83.3% 57.8%;
+  /* Surfaces: deep charcoal with slight warmth */
+  --color-background: #141316;
+  --color-on-background: #e8e5de;
+  --color-surface: #141316;
+  --color-surface-bright: #1e1d22;
+  --color-surface-dim: #0e0d10;
+  --color-surface-tint: #927dff;
+  --color-surface-variant: #2a292e;
+  --color-surface-container-lowest: #0b0a0d;
+  --color-surface-container-low: #1a191e;
+  --color-surface-container: #201f24;
+  --color-surface-container-high: #2a292f;
+  --color-surface-container-highest: #353439;
+  --color-on-surface: #e8e5de;
+  --color-on-surface-variant: #c8c5be;
+  --color-inverse-surface: #e8e5de;
+  --color-inverse-on-surface: #31302c;
+
+  /* Primary stays vibrant, but container adapts */
+  --color-primary: #927dff;
+  --color-primary-dim: #7b64f5;
+  --color-primary-container: #3b1dba;
+  --color-on-primary: #1a0066;
+  --color-on-primary-container: #d4cbff;
+  --color-primary-fixed: #a292ff;
+  --color-primary-fixed-dim: #9581ff;
+  --color-inverse-primary: #6236ff;
+
+  /* Secondary */
+  --color-secondary: #5ce69e;
+  --color-secondary-dim: #40d087;
+  --color-secondary-container: #005e3a;
+  --color-on-secondary: #003922;
+  --color-on-secondary-container: #78fbb6;
+
+  /* Tertiary */
+  --color-tertiary: #ff7989;
+  --color-tertiary-dim: #ff5c70;
+  --color-tertiary-container: #780024;
+  --color-on-tertiary: #510017;
+  --color-on-tertiary-container: #ffd9dd;
+
+  /* Error */
+  --color-error: #ffb3b9;
+  --color-error-dim: #ff8a94;
+  --color-error-container: #8c0028;
+  --color-on-error: #680020;
+  --color-on-error-container: #ffd9dd;
+
+  /* Outline */
+  --color-outline: #9a9890;
+  --color-outline-variant: #4a4944;
 }
 
-* {
-    border-color: hsl(var(--border));
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
-body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-feature-settings: "rlig" 1, "calt" 1;
+.grain-overlay {
+  position: relative;
+}
+.grain-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC2onz7QXM9OChMs_maLD3wTnxRn8nrIFDL7ZPc1_to7S2G4vII2IXyhYlyJOdvtmz-nFq2Y9sF-zOS6EwkpgatrVW3laq-QYitXhtHe6yNf_oUHxu4Sf0FafpVfLbZvfg06XM7JvF7t-sMqDBsetl1W2YE0cjpDpZzk_j6PISAkUJwo1Se7fVIK4DF07TNcOH4A63ofAH5Y-77K8GW9a24pJRcI1zmaQt4FNPd4iYwxUt7WjLeTeyT5WxEhNO_yJ1AEFVGv1SCcbaz");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 10;
 }

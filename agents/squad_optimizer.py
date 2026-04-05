@@ -16,14 +16,17 @@ class TransferRecommendation:
     player_out_team: str
     player_out_price: float
     player_out_xpts: float
+    player_out_xpts_next_5: float
     
     player_in_id: int
     player_in_name: str
     player_in_team: str
     player_in_price: float
     player_in_xpts: float
+    player_in_xpts_next_5: float
     
     points_gain: float
+    points_gain_next_5: float
     price_change: float
     reason: str
 
@@ -63,7 +66,9 @@ class SquadOptimizer:
         # Get all available predictions sorted by value
         all_preds = [
             p for p in self.predictions.predictions.values()
-            if p.minutes_tag in ["Nailed", "unknown"] and p.confidence >= 50
+            if p.minutes_tag in ["Nailed", "unknown"] 
+            and p.confidence >= 50
+            and p.gw_multiplier > 0  # Hard-exclude BGW players
         ]
         
         # Group by position
@@ -197,8 +202,8 @@ class SquadOptimizer:
         ]
         current_preds = [p for p in current_preds if p is not None]
         
-        # Find weak links (lowest expected points by position)
-        current_preds.sort(key=lambda x: x.expected_points)
+        # Find weak links (lowest expected points horizon by position)
+        current_preds.sort(key=lambda x: x.expected_points_next_5)
         
         # For each weak player, find a better replacement
         for weak in current_preds[:5]:  # Check bottom 5
@@ -213,35 +218,40 @@ class SquadOptimizer:
                 p for p in self.predictions.predictions.values()
                 if p.position == weak.position
                 and p.player_id not in current_squad
-                and p.expected_points > weak.expected_points
+                and p.expected_points_next_5 > weak.expected_points_next_5
                 and team_counts.get(p.team, 0) < self.MAX_PER_TEAM
                 and p.price <= weak.price + budget
                 and p.minutes_tag in ["Nailed", "unknown"]
+                and p.gw_multiplier > 0  # Hard-exclude BGW players for incoming transfers
             ]
             
             if replacements:
-                best = max(replacements, key=lambda x: x.expected_points)
+                best = max(replacements, key=lambda x: x.expected_points_next_5)
+                points_gain_next_5 = best.expected_points_next_5 - weak.expected_points_next_5
                 points_gain = best.expected_points - weak.expected_points
                 
-                if points_gain >= 0.5:  # Only recommend if significant gain
+                if points_gain_next_5 >= 2.0:  # Recommend if good horizon gain
                     recommendations.append(TransferRecommendation(
                         player_out_id=weak.player_id,
                         player_out_name=weak.player_name,
                         player_out_team=weak.team,
                         player_out_price=weak.price,
                         player_out_xpts=weak.expected_points,
+                        player_out_xpts_next_5=weak.expected_points_next_5,
                         player_in_id=best.player_id,
                         player_in_name=best.player_name,
                         player_in_team=best.team,
                         player_in_price=best.price,
                         player_in_xpts=best.expected_points,
+                        player_in_xpts_next_5=best.expected_points_next_5,
                         points_gain=round(points_gain, 2),
+                        points_gain_next_5=round(points_gain_next_5, 2),
                         price_change=round(best.price - weak.price, 1),
-                        reason=f"Higher xPts ({best.expected_points:.1f} vs {weak.expected_points:.1f}), {best.fixture_info}"
+                        reason=f"Higher Horizon xPts ({best.expected_points_next_5:.1f} vs {weak.expected_points_next_5:.1f} over next 5 GWs)."
                     ))
         
-        # Sort by points gain
-        recommendations.sort(key=lambda x: x.points_gain, reverse=True)
+        # Sort by points gain horizon
+        recommendations.sort(key=lambda x: x.points_gain_next_5, reverse=True)
         return recommendations[:free_transfers + 2]  # Show a few extra options
     
     def analyze_hit_worth(
@@ -260,34 +270,39 @@ class SquadOptimizer:
                 "breakeven_gws": 0
             }
         
-        # Calculate gains for different scenarios
-        free_only_gain = sum(r.points_gain for r in recommendations[:free_transfers])
+        # Calculate Horizon gains (since hits take time to pay off)
+        free_only_gain_next_5 = sum(r.points_gain_next_5 for r in recommendations[:free_transfers])
         
         results = []
         for extra_hits in range(1, min(4, len(recommendations) - free_transfers + 1)):
             total_transfers = free_transfers + extra_hits
-            transfer_gain = sum(r.points_gain for r in recommendations[:total_transfers])
+            
+            transfer_gain_gw1 = sum(r.points_gain for r in recommendations[:total_transfers])
+            transfer_gain_next_5 = sum(r.points_gain_next_5 for r in recommendations[:total_transfers])
+            
             hit_cost = extra_hits * 4
-            net_gain = transfer_gain - hit_cost
+            net_gain_gw1 = transfer_gain_gw1 - hit_cost
+            net_gain_horizon = transfer_gain_next_5 - hit_cost
             
             # How many GWs to break even on the hit
-            per_gw_gain = transfer_gain / gameweeks
+            per_gw_gain = transfer_gain_next_5 / gameweeks
             breakeven = hit_cost / per_gw_gain if per_gw_gain > 0 else 999
             
             results.append({
                 "hits": extra_hits,
                 "transfers": total_transfers,
-                "points_gain": transfer_gain,
+                "points_gain": transfer_gain_gw1, # UI expects 1GW
+                "points_gain_next_5": transfer_gain_next_5,
                 "hit_cost": hit_cost,
-                "net_gain_gw1": net_gain,
-                "net_gain_horizon": transfer_gain * gameweeks - hit_cost,
+                "net_gain_gw1": net_gain_gw1,
+                "net_gain_horizon": net_gain_horizon,
                 "breakeven_gws": round(breakeven, 1)
             })
         
         # Find best option
         best = max(results, key=lambda x: x["net_gain_horizon"])
         
-        if best["net_gain_horizon"] > free_only_gain * gameweeks:
+        if best["net_gain_horizon"] > free_only_gain_next_5:
             recommendation = f"Take {best['hits']} hit(s) for {best['transfers']} transfers"
         else:
             recommendation = "Use free transfers only"

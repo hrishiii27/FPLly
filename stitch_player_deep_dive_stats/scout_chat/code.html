@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Kinetic Editorial | Scout AI Chat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&amp;family=Manrope:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-dim": "#00663f",
+              "tertiary-container": "#ff909c",
+              "on-tertiary-container": "#68001e",
+              "secondary": "#007348",
+              "surface-container-low": "#fcf9f1",
+              "secondary-container": "#78fbb6",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#2b0090",
+              "tertiary-fixed-dim": "#ff7989",
+              "on-secondary-container": "#005e3a",
+              "surface-variant": "#ebe8df",
+              "surface-tint": "#6236ff",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#f0eee5",
+              "primary-container": "#a292ff",
+              "primary-fixed": "#a292ff",
+              "on-error-container": "#510017",
+              "error-dim": "#a70138",
+              "surface-dim": "#e5e2d9",
+              "surface-bright": "#fdffda",
+              "secondary-fixed-dim": "#69eca8",
+              "on-primary-container": "#220076",
+              "background": "#fdffda",
+              "on-background": "#383833",
+              "tertiary-fixed": "#ff909c",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#bbb9b3",
+              "surface": "#fdffda",
+              "on-secondary-fixed": "#00492c",
+              "inverse-surface": "#0e0e0b",
+              "tertiary": "#c31c45",
+              "inverse-primary": "#927dff",
+              "on-secondary-fixed-variant": "#006941",
+              "tertiary-dim": "#b1063a",
+              "surface-container": "#f6f3eb",
+              "on-primary-fixed": "#000000",
+              "outline": "#82807b",
+              "on-error": "#ffffff",
+              "on-tertiary-fixed": "#39000c",
+              "on-surface": "#383833",
+              "error-container": "#f74b6d",
+              "primary-fixed-dim": "#9581ff",
+              "on-secondary": "#ffffff",
+              "inverse-on-surface": "#9f9d97",
+              "surface-container-highest": "#ebe8df",
+              "primary": "#6236ff",
+              "on-tertiary-fixed-variant": "#780024",
+              "on-surface-variant": "#65645f",
+              "error": "#c12048",
+              "secondary-fixed": "#78fbb6",
+              "primary-dim": "#5621f3"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Manrope"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "1rem", "xl": "1.25rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #f0eee5;
+        border-radius: 10px;
+      }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar Implementation -->
+<nav class="bg-[#fdffda] dark:bg-stone-950 docked full-width top-0 sticky z-40">
+<div class="flex justify-between items-center px-8 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black tracking-tighter text-[#383833] dark:text-[#fcf9f1] font-headline">The Kinetic Editorial</span>
+<div class="hidden lg:flex items-center gap-6">
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Analytics</a>
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Transfers</a>
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Predictions</a>
+<a class="text-[#6236ff] dark:text-[#a292ff] font-bold border-b-2 border-[#6236ff] pb-1" href="#">Strategy</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center bg-surface-container-high rounded-full px-4 py-2">
+<span class="material-symbols-outlined text-outline text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm font-label w-40" placeholder="Search strategy..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-[#383833] dark:text-[#fcf9f1]">notifications</button>
+<button class="material-symbols-outlined text-[#383833] dark:text-[#fcf9f1]">settings</button>
+<img alt="Manager Profile" class="w-10 h-10 rounded-full object-cover ring-2 ring-primary ring-offset-2 ring-offset-background" data-alt="Close up portrait of an professional manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnI6t8IOgIwr7w8NzBsACM4NPKzrw2_qwy0M4TIiTxkoYbkJy8DN0ocoYir2_ColBtgpiQ90JBK0e6FloV-17Gp5jTQpyZ2g4kWjxc110ENwRlQXHSgLHGBFW-fA3xeWE5UmxXtaSIMMDypHljM29Huu6v43dwHKitOMDXFyOOwT96NQdZLUMG8YDeotGEXHUMGrFguIMVuLwfhqgYcHMVyXCV76BUolGHWMPn9u7MDHwf4SKjriQ1QBmY5mj0Bdo1m_bXArYlZHCu"/>
+</div>
+</div>
+<div class="bg-[#f0eee5] dark:bg-stone-900 h-[1px] w-full"></div>
+</nav>
+<div class="flex max-w-screen-2xl mx-auto h-[calc(100vh-73px)] relative">
+<!-- SideNavBar Implementation -->
+<aside class="hidden md:flex flex-col h-full w-64 border-r border-[#f0eee5] dark:border-stone-800 bg-[#fcf9f1] dark:bg-stone-900 shadow-[20px_0_40px_rgba(56,56,51,0.03)]">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<p class="font-headline text-on-background font-bold text-sm">GW 24 Strategy</p>
+<p class="font-label text-xs text-outline uppercase tracking-widest">Rank: 12,402</p>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label text-xs uppercase tracking-widest">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label text-xs uppercase tracking-widest">Squad Hub</span>
+</a>
+<a class="flex items-center gap-3 text-[#6236ff] dark:text-[#a292ff] font-bold bg-[#fdffda] dark:bg-stone-950 rounded-lg p-3 mx-2 translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="font-label text-xs uppercase tracking-widest">Expert Intel</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label text-xs uppercase tracking-widest">Fixture Ticker</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-label text-xs uppercase tracking-widest">Community</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 space-y-4">
+<button class="w-full py-4 bg-primary text-on-primary rounded-full font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">settings_suggest</span>
+                    Optimize Team
+                </button>
+<div class="pt-4 border-t border-[#f0eee5] dark:border-stone-800">
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] p-3 mx-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label text-xs uppercase tracking-widest">Support</span>
+</a>
+<a class="flex items-center gap-3 text-tertiary p-3 mx-2 hover:bg-tertiary-container/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label text-xs uppercase tracking-widest">Logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Chat Interface Content -->
+<main class="flex-1 flex flex-col bg-background p-4 md:p-8 overflow-hidden">
+<!-- Editorial Header -->
+<header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="space-y-1">
+<h1 class="font-headline text-4xl md:text-5xl font-black text-on-background tracking-tighter leading-none">
+                        SCOUT <span class="text-primary italic">INTELLIGENCE</span>
+</h1>
+<p class="font-body text-outline text-lg max-w-xl">Deep-data analysis and strategic insights tailored to your current GW 24 squad.</p>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-lowest p-2 rounded-xl shadow-sm border border-surface-container-high">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-[10px] text-white font-bold border-2 border-surface">AI</div>
+<img class="w-8 h-8 rounded-full border-2 border-surface object-cover" data-alt="Senior analyst avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUNx5WRn2Lyx94WSCD3CjDZowRD7kEEcNyLIPFeRL7X44PzV_5Madyo0qDuAjTpb82Y3TVbCEGkXIk4rl8nW0eMTzPjfmC4hRkZmn8ujt5lsPkAO62wEQPt6HUWWhF9SVG4i78h4hTjlxD4wB6MbHifSI6n6Sc6HJSPJ8A5vnfgHEEuCoNffNKAaghzwG2wCk6_ugahlYa0PglgJMhGN_9_ohbVcu53E0Drbs8CdRZjrnKUqqxECZMHRQ5qw4_XZ5QEZg0RtdUkDVn"/>
+</div>
+<span class="font-label text-[10px] uppercase tracking-tighter text-secondary font-bold">LIVE: Tactical Engine Active</span>
+</div>
+</header>
+<!-- Chat Canvas -->
+<div class="flex-1 flex flex-col bg-surface-container-low rounded-3xl overflow-hidden relative border border-surface-container-high shadow-lg">
+<!-- Chat Messages -->
+<div class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 custom-scrollbar">
+<!-- AI Scout Message -->
+<div class="flex gap-4 max-w-3xl">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">neurology</span>
+</div>
+<div class="space-y-2">
+<div class="bg-surface-container-lowest p-6 rounded-2xl rounded-tl-none border border-surface-container-high shadow-sm">
+<p class="text-on-background font-body leading-relaxed">
+                                    Welcome back, Manager. Based on your current 3-4-3 formation and the fact that <span class="text-primary font-bold">Erling Haaland</span> is back to full fitness, my models suggest a heavy rotation risk for your bench assets this week.
+                                </p>
+<div class="mt-4 grid grid-cols-2 gap-3">
+<div class="bg-surface-container-high p-3 rounded-lg border-l-4 border-secondary">
+<p class="text-[10px] font-label uppercase tracking-widest text-outline">Risk Factor</p>
+<p class="text-lg font-headline font-bold text-secondary">LOW</p>
+</div>
+<div class="bg-surface-container-high p-3 rounded-lg border-l-4 border-primary">
+<p class="text-[10px] font-label uppercase tracking-widest text-outline">xG Forecast</p>
+<p class="text-lg font-headline font-bold text-primary">+1.84</p>
+</div>
+</div>
+</div>
+<span class="text-[10px] font-label text-outline uppercase ml-1">SCOUT AI • 10:42 AM</span>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex gap-4 max-w-2xl ml-auto flex-row-reverse">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-xl">person</span>
+</div>
+<div class="flex flex-col items-end space-y-2">
+<div class="bg-primary text-on-primary p-6 rounded-2xl rounded-tr-none shadow-md">
+<p class="font-body leading-relaxed">
+                                    Should I use my Triple Captain chip on Salah against Brentford, or wait for the Double Gameweek in GW25?
+                                </p>
+</div>
+<span class="text-[10px] font-label text-outline uppercase mr-1">YOU • 10:45 AM</span>
+</div>
+</div>
+<!-- AI Scout Detailed Breakdown -->
+<div class="flex gap-4 max-w-4xl">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">neurology</span>
+</div>
+<div class="space-y-4 flex-1">
+<div class="bg-surface-container-lowest p-6 rounded-2xl rounded-tl-none border border-surface-container-high shadow-sm space-y-4">
+<p class="text-on-background font-body leading-relaxed">
+                                    Strategic analysis favors <span class="font-bold">waiting</span>. Here's why Salah's potential in GW25 outweighs the GW24 Brentford fixture:
+                                </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface p-4 rounded-xl border border-surface-container-high relative overflow-hidden group">
+<div class="absolute -right-2 -bottom-2 opacity-5 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-6xl">show_chart</span>
+</div>
+<h4 class="font-headline font-bold text-sm mb-2 text-primary">GW 24 (Single)</h4>
+<div class="flex justify-between items-end">
+<div>
+<p class="text-xs text-outline font-label uppercase">Projected Pts</p>
+<p class="text-2xl font-headline font-black">7.4</p>
+</div>
+<span class="bg-surface-container-high px-2 py-1 rounded text-[10px] font-label font-bold">SOU (A)</span>
+</div>
+</div>
+<div class="bg-primary-container/20 p-4 rounded-xl border border-primary/20 relative overflow-hidden group">
+<div class="absolute -right-2 -bottom-2 opacity-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-6xl text-primary">auto_graph</span>
+</div>
+<h4 class="font-headline font-bold text-sm mb-2 text-primary">GW 25 (Double)</h4>
+<div class="flex justify-between items-end">
+<div>
+<p class="text-xs text-outline font-label uppercase">Projected Pts</p>
+<p class="text-2xl font-headline font-black text-primary">14.8</p>
+</div>
+<span class="bg-primary text-white px-2 py-1 rounded text-[10px] font-label font-bold">LUT (H), BRE (H)</span>
+</div>
+</div>
+</div>
+<p class="text-on-background font-body leading-relaxed text-sm italic">
+                                    "Wait for the volume. Two home fixtures against bottom-half defenses is the statistically optimal time for the TC chip."
+                                </p>
+</div>
+<span class="text-[10px] font-label text-outline uppercase ml-1">SCOUT AI • 10:46 AM</span>
+</div>
+</div>
+</div>
+<!-- Input Area and Quick Actions -->
+<div class="p-4 md:p-8 bg-surface-container-lowest border-t border-surface-container-high">
+<!-- Quick Action Chips -->
+<div class="flex flex-wrap gap-2 mb-6">
+<button class="px-4 py-2 rounded-full border border-surface-container-high bg-surface hover:bg-primary-container/10 hover:border-primary/30 transition-all text-xs font-label uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary">stars</span>
+                            Captain picks
+                        </button>
+<button class="px-4 py-2 rounded-full border border-surface-container-high bg-surface hover:bg-primary-container/10 hover:border-primary/30 transition-all text-xs font-label uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary">layers</span>
+                            Chip strategy
+                        </button>
+<button class="px-4 py-2 rounded-full border border-surface-container-high bg-surface hover:bg-primary-container/10 hover:border-primary/30 transition-all text-xs font-label uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary">search_insights</span>
+                            Differential Finder
+                        </button>
+<button class="px-4 py-2 rounded-full border border-surface-container-high bg-surface hover:bg-primary-container/10 hover:border-primary/30 transition-all text-xs font-label uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary">transfer_within_a_station</span>
+                            Next 3 Transfers
+                        </button>
+</div>
+<!-- Text Input -->
+<div class="relative flex items-center">
+<input class="w-full bg-surface-container-high border-none rounded-2xl py-5 px-6 pr-32 focus:ring-2 focus:ring-primary/20 text-on-background font-body placeholder:text-outline/60 shadow-inner" placeholder="Ask your scout about player stats, rotation risks, or captain choices..." type="text"/>
+<div class="absolute right-3 flex items-center gap-2">
+<button class="p-2 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span>SEND</span>
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual Data Sidebar (Bento Style) -->
+<aside class="hidden xl:flex flex-col w-80 p-8 gap-6 border-l border-[#f0eee5] dark:border-stone-800 bg-[#fdffda]">
+<h3 class="font-headline font-black text-xl tracking-tighter uppercase border-b-4 border-primary inline-block self-start pb-1">Context Engine</h3>
+<div class="space-y-6">
+<!-- Squad Context -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high space-y-4">
+<div class="flex items-center justify-between">
+<h4 class="font-label text-xs uppercase tracking-widest text-outline">Current Active Squad</h4>
+<span class="text-secondary font-bold text-xs">96.4 ITB</span>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-2 bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="text-sm font-bold">Salah</span>
+</div>
+<span class="font-label text-xs text-outline">13.2m</span>
+</div>
+<div class="flex items-center justify-between p-2 bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="text-sm font-bold">Haaland</span>
+</div>
+<span class="font-label text-xs text-outline">14.4m</span>
+</div>
+<div class="flex items-center justify-between p-2 bg-surface-container-low rounded-lg opacity-50">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="text-sm font-bold line-through">Bowen</span>
+</div>
+<span class="font-label text-xs text-tertiary font-bold">INJ</span>
+</div>
+</div>
+</div>
+<!-- Price Alert -->
+<div class="bg-primary p-6 rounded-2xl shadow-lg relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-20">
+<span class="material-symbols-outlined text-6xl text-on-primary">trending_up</span>
+</div>
+<p class="text-primary-fixed font-label text-[10px] uppercase tracking-[0.2em] mb-1 font-bold">Urgent Insight</p>
+<h4 class="text-on-primary font-headline font-bold text-lg mb-2">Price Rise Alert</h4>
+<p class="text-on-primary/80 text-xs font-body mb-4">Diogo Jota is expected to rise by £0.1m tonight. Predicted ROI for GW25: 8.2 pts.</p>
+<button class="w-full bg-on-primary text-primary py-2 rounded-lg font-bold text-xs uppercase tracking-widest">Execute Transfer</button>
+</div>
+<!-- Global Trends -->
+<div class="space-y-3">
+<h4 class="font-label text-xs uppercase tracking-widest text-outline">Community Intelligence</h4>
+<div class="flex items-center gap-3">
+<span class="w-12 h-1 bg-primary rounded-full"></span>
+<p class="text-xs font-medium">62% of top 10k are wildcarding in GW27</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-12 h-1 bg-secondary rounded-full"></span>
+<p class="text-xs font-medium">Captaincy split: 45% Haaland / 38% Salah</p>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Mobile Navigation Shell (BottomNavBar) -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-[#fdffda] dark:bg-stone-950 flex justify-around items-center py-3 border-t border-[#f0eee5] dark:border-stone-800 z-50">
+<button class="flex flex-col items-center gap-1 text-[#383833] dark:text-[#bbb9b3]">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-label uppercase">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-[#383833] dark:text-[#bbb9b3]">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-[10px] font-label uppercase">Squad</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="text-[10px] font-label uppercase font-bold">Scout</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-[#383833] dark:text-[#bbb9b3]">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-[10px] font-label uppercase">Ticker</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-[#383833] dark:text-[#bbb9b3]">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-label uppercase">Profile</span>
+</button>
+</div>
+</body></html>

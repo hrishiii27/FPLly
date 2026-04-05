@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FPL Editorial | Season Review</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&amp;family=Manrope:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-dim": "#b1063a",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#ff909c",
+                        "secondary-dim": "#00663f",
+                        "primary": "#6236ff",
+                        "on-secondary-fixed-variant": "#006941",
+                        "primary-container": "#a292ff",
+                        "inverse-primary": "#927dff",
+                        "primary-fixed": "#a292ff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#78fbb6",
+                        "tertiary-fixed-dim": "#ff7989",
+                        "surface-container-highest": "#ebe8df",
+                        "tertiary": "#c31c45",
+                        "on-surface-variant": "#65645f",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#f0eee5",
+                        "surface-bright": "#fdffda",
+                        "secondary": "#007348",
+                        "on-secondary-container": "#005e3a",
+                        "error-container": "#f74b6d",
+                        "outline": "#82807b",
+                        "on-secondary-fixed": "#00492c",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#9f9d97",
+                        "error-dim": "#a70138",
+                        "on-background": "#383833",
+                        "secondary-fixed-dim": "#69eca8",
+                        "surface-dim": "#e5e2d9",
+                        "on-primary-container": "#220076",
+                        "on-primary-fixed": "#000000",
+                        "tertiary-container": "#ff909c",
+                        "on-surface": "#383833",
+                        "on-error-container": "#510017",
+                        "surface-variant": "#ebe8df",
+                        "surface-container-low": "#fcf9f1",
+                        "background": "#fdffda",
+                        "on-primary-fixed-variant": "#2b0090",
+                        "primary-dim": "#5621f3",
+                        "surface-tint": "#6236ff",
+                        "outline-variant": "#bbb9b3",
+                        "on-tertiary-fixed": "#39000c",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#fdffda",
+                        "surface-container": "#f6f3eb",
+                        "on-tertiary-container": "#68001e",
+                        "secondary-container": "#78fbb6",
+                        "inverse-surface": "#0e0e0b",
+                        "primary-fixed-dim": "#9581ff",
+                        "error": "#c12048"
+                    },
+                    fontFamily: {
+                        "headline": ["Epilogue"],
+                        "body": ["Manrope"],
+                        "label": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.grainy-overlay {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBxCdMYGqLXosWQWDKGAwZ9JRWlVv9jMQHvnZXHeEq3KlgY2dhDlFssMyeky_a_svXD4jsWNtCZ36s-87jfMJgE_jatRESsYz2riI5SNpSehGSjxUjQ1v2Sul6C49rnHhc7chzfl9FmL9GiLM6gkWTr0r_LhMGAirtye8tgOFRAJVm0LHqm30fLYjNorbKmU5Z_sRTZqLxYKOp0DeQ8sWzmbj-q2m3JKfF932OPo_HkOn0bBHesXjGPgDwBbunNtQKrchAvvoFuJsJS);
+    opacity: 0.03;
+    pointer-events: none
+    }
+.spring-animate {
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+    }</style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen selection:bg-primary-container">
+<!-- Top Navigation Bar -->
+<header class="bg-[#fdffda] dark:bg-stone-950 shadow-[0px_20px_40px_rgba(56,56,51,0.06)] sticky top-0 z-50 transition no-border">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="text-2xl font-black italic tracking-tighter text-[#383833] dark:text-[#f0eee5]">
+                FPL Editorial
+            </div>
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Dashboard</a>
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Transfers</a>
+<a class="text-[#383833] dark:text-[#bbb9b3] font-medium hover:text-[#6236ff] transition-colors duration-300" href="#">Leagues</a>
+<a class="text-[#6236ff] dark:text-[#a292ff] font-bold border-b-2 border-[#6236ff] pb-1" href="#">The BroadSheet</a>
+</nav>
+<div class="flex items-center space-x-6">
+<div class="flex space-x-4 text-[#6236ff] dark:text-[#a292ff]">
+<span class="material-symbols-outlined cursor-pointer hover:opacity-80 transition-all">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:opacity-80 transition-all">settings</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="Close up portrait of a confident male football manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkHXODTX64d7FH3Js0xvuSn9T_8RGAkbnGl7e-NQqkDO22-8xRvo-U198ECijFiMpO-mOQo9s1MeNSzUw12HkJbzrWaLwO3-jZy-ehus17RYVAIQm8VxUNwItKqz3AgbgF1gg96pDleUcZB6uBU4e_LGaMDvDZ4baFRNkY0y8v4me7KXV-lBUire6E87FM50hTM5xxjymgm_JYmcQudOnyQOQQHwYca893t9tyTmzIfXb23LfyOemCDw9bkXqQLd_WqBgc0w35sz0Y"/>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-screen-2xl mx-auto px-6 md:px-8 py-12">
+<!-- Hero Section: Manager Persona -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
+<div class="lg:col-span-8 flex flex-col justify-center">
+<h1 class="font-headline font-black italic text-6xl md:text-8xl tracking-tighter text-on-surface mb-4 leading-none uppercase">
+                    Season <br/> <span class="text-primary">Review</span>
+</h1>
+<p class="font-body text-xl text-on-surface-variant max-w-xl mb-8">
+                    Your 2023/24 campaign deconstructed. From the masterstroke transfers to the benching headaches—the data doesn't lie.
+                </p>
+<div class="flex items-center gap-4">
+<span class="bg-secondary text-white font-label px-4 py-2 rounded-full uppercase tracking-widest text-xs">Final Rank: 42,109</span>
+<span class="bg-primary text-white font-label px-4 py-2 rounded-full uppercase tracking-widest text-xs">Top 1% Global</span>
+</div>
+</div>
+<!-- Persona Card -->
+<div class="lg:col-span-4 relative">
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-[0px_20px_40px_rgba(56,56,51,0.06)] relative overflow-hidden h-full border-none">
+<div class="grainy-overlay absolute inset-0"></div>
+<span class="font-label text-[10px] uppercase tracking-[0.3em] text-outline mb-6 block">Manager Identity</span>
+<h2 class="font-headline font-extrabold italic text-4xl text-on-surface mb-2 leading-tight">THE RISK TAKER</h2>
+<p class="font-body text-sm text-on-surface-variant mb-8 leading-relaxed">
+                        You averaged 2.4 differentials per Gameweek. While others followed the template, you hunted for the gold in the margins.
+                    </p>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<span class="font-label text-xs uppercase text-outline">Risk Profile</span>
+<span class="font-label text-lg font-bold text-secondary">88%</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[88%]"></div>
+</div>
+</div>
+<!-- Overlapping image for movement -->
+<div class="absolute -bottom-10 -right-10 opacity-10 scale-150 rotate-12">
+<span class="material-symbols-outlined text-[160px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Rank History Visualization (Simulated) -->
+<section class="mb-16">
+<div class="bg-surface-container-low rounded-xl p-8 relative">
+<div class="flex justify-between items-center mb-12">
+<h3 class="font-headline font-bold italic text-3xl text-on-surface">THE ASCENT</h3>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="font-label text-[10px] uppercase tracking-widest">Global Rank</span>
+</div>
+</div>
+</div>
+<!-- Visualizing a graph with simple divs/heights -->
+<div class="h-[300px] w-full flex items-end justify-between gap-1 md:gap-2 px-2">
+<!-- Graph bars for GM 1-38 -->
+<div class="bg-primary-container/20 w-full h-[20%] rounded-t-sm"></div>
+<div class="bg-primary-container/20 w-full h-[25%] rounded-t-sm"></div>
+<div class="bg-primary-container/20 w-full h-[35%] rounded-t-sm"></div>
+<div class="bg-primary-container/20 w-full h-[30%] rounded-t-sm"></div>
+<div class="bg-primary-container/30 w-full h-[45%] rounded-t-sm"></div>
+<div class="bg-primary-container/40 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-primary-container/40 w-full h-[55%] rounded-t-sm"></div>
+<div class="bg-primary-container/30 w-full h-[48%] rounded-t-sm"></div>
+<div class="bg-primary-container/50 w-full h-[65%] rounded-t-sm"></div>
+<div class="bg-primary w-full h-[85%] rounded-t-sm relative group transition-all cursor-pointer">
+<div class="hidden group-hover:block absolute -top-12 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] font-label p-2 rounded whitespace-nowrap">GW 24: TOP 10k PEAK</div>
+</div>
+<div class="bg-primary-container/50 w-full h-[80%] rounded-t-sm"></div>
+<div class="bg-primary-container/40 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-primary-container/60 w-full h-[75%] rounded-t-sm"></div>
+<div class="bg-primary-container/70 w-full h-[82%] rounded-t-sm"></div>
+<div class="bg-primary-container/80 w-full h-[90%] rounded-t-sm"></div>
+<div class="bg-primary-container/40 w-full h-[60%] rounded-t-sm"></div>
+<div class="bg-primary-container/30 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-primary-container/50 w-full h-[65%] rounded-t-sm"></div>
+<div class="bg-primary-container/60 w-full h-[78%] rounded-t-sm"></div>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/20 flex justify-between text-[10px] font-label text-outline uppercase tracking-[0.2em]">
+<span>Gameweek 1</span>
+<span>Gameweek 19 (Halfway)</span>
+<span>Gameweek 38</span>
+</div>
+</div>
+</section>
+<!-- Transfer Analysis: Bento Grid Style -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+<!-- Best Transfer -->
+<div class="lg:col-span-2 bg-surface-container-highest rounded-xl p-8 relative overflow-hidden">
+<div class="flex justify-between items-start relative z-10">
+<div>
+<span class="bg-secondary text-white font-label px-3 py-1 rounded-full text-[10px] uppercase tracking-widest mb-4 inline-block">The Masterstroke</span>
+<h4 class="font-headline font-bold italic text-4xl text-on-surface leading-none mb-1">Cole Palmer</h4>
+<p class="font-body text-sm text-on-surface-variant">Brought in GW7 | £5.0m</p>
+</div>
+<div class="text-right">
+<span class="font-headline font-black italic text-5xl text-secondary">+192</span>
+<p class="font-label text-[10px] uppercase text-secondary font-bold">Points Gained</p>
+</div>
+</div>
+<div class="mt-8 relative z-10">
+<img alt="Cole Palmer Celebration" class="w-full h-48 object-cover rounded-lg shadow-xl grayscale-0 hover:grayscale transition-all duration-500" data-alt="Abstract image of a football player celebrating in a stadium" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCd1rYIOFve5jPdZSQCGhgrhwDVLC7p7chnNKlQrc8AghCddtplfONta4ybDyFjOmBXhBFQxAtjWfXufViol0K07yuSomW4tZhaSaZl9kl4YRB8g2RkdqVgMph31K8bhploBdMVNgGtL27nZrSGyUf726yhWotpsXcY7f-NseLjiWXcuJvJtd5ZWR7K831VauRn8o1LOjjUgNFUL1yiOWUQY2_mmRhbl50qioSM0Bflywa_r0MZFvLW1xE70m3Z_lzjM4btkdNoXsuL"/>
+</div>
+<div class="absolute -bottom-8 -left-8 text-secondary opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[200px]" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+</div>
+</div>
+<!-- Worst Transfer -->
+<div class="lg:col-span-1 bg-surface-container-high rounded-xl p-6 border-none">
+<span class="bg-tertiary text-white font-label px-3 py-1 rounded-full text-[10px] uppercase tracking-widest mb-4 inline-block">The Flop</span>
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-surface-container-low overflow-hidden ring-4 ring-tertiary/10">
+<img alt="Player Image" class="w-full h-full object-cover" data-alt="Close up of a football player looking disappointed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBg7usMcLbfLLnsgq2yrrafxeDMIRufI3HyUe1xGWMeOEva13HspwhcKvVbbcLXrCVmtqi5k0OCYpcWKNZLCeqwsJxXWkBsI2GAZF-kys0cv1WJSSaJM6G6On16yxfLmDRzcD1Reb4bzoWwrPaGQwHfMQWn0yJatnX0gEvkdw2Z5b5T09HFECgnLHktO0qiZrbT4ElhOPIBGOPM3hCIfyUB7929tfR-z0AWyxY61z8ejRkJaPOPNrAQ9j_ER_2bO2cFv5jUNV-CPuF_"/>
+</div>
+<div>
+<h4 class="font-headline font-bold italic text-xl text-on-surface">Reece James</h4>
+<p class="font-body text-xs text-on-surface-variant">3 Red Cards | 12 PTs</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg">
+<p class="font-body text-xs leading-relaxed text-on-surface">
+                        "Your biggest point-drain. You held through 3 injuries and 2 suspensions. A lesson in sunk-cost fallacy."
+                    </p>
+</div>
+</div>
+<!-- Captaincy Stats -->
+<div class="lg:col-span-1 bg-primary rounded-xl p-6 text-white relative overflow-hidden flex flex-col justify-between">
+<div class="grainy-overlay absolute inset-0"></div>
+<div>
+<span class="font-label text-[10px] uppercase tracking-[0.2em] opacity-70">Captaincy Logic</span>
+<h4 class="font-headline font-bold italic text-3xl mt-2 leading-none">HAALAND <br/>RELIEF</h4>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-end border-b border-white/20 pb-2">
+<span class="font-body text-xs">Armband Accuracy</span>
+<span class="font-label text-xl font-bold">72%</span>
+</div>
+<div class="flex justify-between items-end border-b border-white/20 pb-2">
+<span class="font-body text-xs">Effective Points</span>
+<span class="font-label text-xl font-bold">842</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Trophy Cabinet -->
+<section class="mb-24">
+<h3 class="font-headline font-black italic text-4xl mb-8 flex items-center gap-3">
+                TROPHY CABINET
+                <div class="h-1 flex-grow bg-surface-container-high ml-4"></div>
+</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Trophy 1 -->
+<div class="group bg-surface-container-low p-8 rounded-xl flex items-center gap-6 hover:bg-surface-container-high transition-all">
+<div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+</div>
+<div>
+<span class="font-label text-[10px] uppercase text-outline">Mini-League</span>
+<h5 class="font-headline font-bold italic text-xl leading-tight">THE WATERCOOLER CHAMPION</h5>
+<p class="font-body text-xs text-on-surface-variant mt-1">1st of 32 managers</p>
+</div>
+</div>
+<!-- Trophy 2 -->
+<div class="group bg-surface-container-low p-8 rounded-xl flex items-center gap-6 hover:bg-surface-container-high transition-all">
+<div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<div>
+<span class="font-label text-[10px] uppercase text-outline">Performance</span>
+<h5 class="font-headline font-bold italic text-xl leading-tight">WEEKLY HIGH SCORE (GW12)</h5>
+<p class="font-body text-xs text-on-surface-variant mt-1">112 Points (0.01% Global)</p>
+</div>
+</div>
+<!-- Trophy 3 -->
+<div class="group bg-surface-container-low p-8 rounded-xl flex items-center gap-6 hover:bg-surface-container-high transition-all">
+<div class="w-20 h-20 bg-tertiary/10 rounded-full flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div>
+<span class="font-label text-[10px] uppercase text-outline">Milestone</span>
+<h5 class="font-headline font-bold italic text-xl leading-tight">10-SEASON VETERAN</h5>
+<p class="font-body text-xs text-on-surface-variant mt-1">Consistency Award</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-6 pt-2 bg-[#fdffda]/80 dark:bg-stone-950/80 backdrop-blur-xl shadow-[0_-10px_30px_rgba(56,56,51,0.04)] rounded-t-[2rem]">
+<div class="flex flex-col items-center justify-center text-[#383833] dark:text-[#bbb9b3] p-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-full">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#383833] dark:text-[#bbb9b3] p-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-full">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">Squad</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#383833] dark:text-[#bbb9b3] p-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-full">
+<span class="material-symbols-outlined">swap_horizontal_circle</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">Market</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#6236ff] text-white rounded-full p-3 scale-110 -translate-y-2 shadow-lg shadow-[#6236ff]/30 spring-animate">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">Stats</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#383833] dark:text-[#bbb9b3] p-2 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-full">
+<span class="material-symbols-outlined">article</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">News</span>
+</div>
+</nav>
+<!-- Floating Action Button: Share Review (Contextual) -->
+<button class="fixed bottom-24 right-8 bg-primary text-on-primary w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined">share</span>
+</button>
+</body></html>

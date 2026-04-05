@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Leagues &amp; Social | FPL Kinetic</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&amp;family=Manrope:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#ff909c",
+              "surface-dim": "#e5e2d9",
+              "surface-variant": "#ebe8df",
+              "secondary-dim": "#00663f",
+              "surface-bright": "#fdffda",
+              "tertiary-fixed": "#ff909c",
+              "on-primary": "#ffffff",
+              "tertiary-dim": "#b1063a",
+              "on-secondary-container": "#005e3a",
+              "inverse-surface": "#0e0e0b",
+              "tertiary-fixed-dim": "#ff7989",
+              "secondary-container": "#78fbb6",
+              "error-container": "#f74b6d",
+              "on-secondary-fixed": "#00492c",
+              "on-error-container": "#510017",
+              "on-tertiary-fixed-variant": "#780024",
+              "error": "#c12048",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#fdffda",
+              "on-primary-fixed-variant": "#2b0090",
+              "inverse-primary": "#927dff",
+              "on-error": "#ffffff",
+              "outline": "#82807b",
+              "background": "#fdffda",
+              "on-tertiary": "#ffffff",
+              "primary-dim": "#5621f3",
+              "surface-container-low": "#fcf9f1",
+              "secondary-fixed": "#78fbb6",
+              "primary-fixed": "#a292ff",
+              "on-secondary": "#ffffff",
+              "on-tertiary-container": "#68001e",
+              "on-primary-fixed": "#000000",
+              "secondary": "#007348",
+              "error-dim": "#a70138",
+              "on-surface-variant": "#65645f",
+              "on-primary-container": "#220076",
+              "secondary-fixed-dim": "#69eca8",
+              "on-surface": "#383833",
+              "primary-container": "#a292ff",
+              "on-background": "#383833",
+              "on-tertiary-fixed": "#39000c",
+              "primary": "#6236ff",
+              "on-secondary-fixed-variant": "#006941",
+              "surface-tint": "#6236ff",
+              "surface-container": "#f6f3eb",
+              "tertiary": "#c31c45",
+              "surface-container-highest": "#ebe8df",
+              "primary-fixed-dim": "#9581ff",
+              "surface-container-high": "#f0eee5",
+              "inverse-on-surface": "#9f9d97",
+              "outline-variant": "#bbb9b3"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Manrope"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.paper-grain {
+    position: relative
+    }
+.paper-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA-vEGFjiXI2pNleFAG2BoKu9trTD8Pr4E5SzebNom5rjPoGGstB_CyZtXeU6irXfuzoYdXLPqSalDJcswIAuZiw0xCYZmcF37Seb_pWe8yQwCwkZ-qGZV_frosBdbzHP9r1NzDb5chFKbFpGhKUQgznD1lhgVJI8iKB_JiNcJHuZlX2OYuqoBepuZrVPrQsl5n9yLCCm7BwbTRp0BcBfHY5oa5Di5OFaXyl7vM3cQYciupbuRQyyldfUzlo-hUdGEa3p0seWQvMGjV);
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 10
+    }</style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-64 z-40 bg-[#fdffda] dark:bg-[#1a1a17] flex flex-col p-4 border-r border-[#f0eee5] dark:border-[#2a2a24]">
+<div class="mb-10 px-4">
+<h1 class="font-headline text-xl font-black text-[#383833] dark:text-[#fdffda]">Kinetic</h1>
+<p class="font-body text-xs text-on-surface-variant uppercase tracking-widest opacity-70">Editorial Analytics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-3 hover:bg-[#f0eee5] dark:hover:bg-[#2a2a24] rounded-xl transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-3 hover:bg-[#f0eee5] dark:hover:bg-[#2a2a24] rounded-xl transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label">My Team</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-3 hover:bg-[#f0eee5] dark:hover:bg-[#2a2a24] rounded-xl transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-label">Predictions</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-3 hover:bg-[#f0eee5] dark:hover:bg-[#2a2a24] rounded-xl transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">star</span>
+<span class="font-label">Optimal XI</span>
+</a>
+<a class="flex items-center gap-3 bg-[#6236ff] text-white rounded-xl px-4 py-3 shadow-lg shadow-[#6236ff]/20 scale-[0.98]" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="font-label">Differentials</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-3 hover:bg-[#f0eee5] dark:hover:bg-[#2a2a24] rounded-xl transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">pie_chart</span>
+<span class="font-label">Ownership</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-3 hover:bg-[#f0eee5] dark:hover:bg-[#2a2a24] rounded-xl transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label">Strategy</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-3 hover:bg-[#f0eee5] dark:hover:bg-[#2a2a24] rounded-xl transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label">Analysis</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-[#fcf9f1] pt-4 space-y-1">
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-2 hover:bg-[#f0eee5] rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-sm">Settings</span>
+</a>
+<a class="flex items-center gap-3 text-[#383833] dark:text-[#bbb9b3] px-4 py-2 hover:bg-[#f0eee5] rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label text-sm">Help</span>
+</a>
+</div>
+</aside>
+<main class="ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-50 bg-[#fdffda] dark:bg-[#1a1a17]">
+<div class="flex justify-between items-center w-full px-8 py-4 mx-auto max-w-[1440px]">
+<div class="flex items-center gap-8">
+<span class="font-headline font-bold text-sm tracking-tight text-[#6236ff] dark:text-[#a292ff]">Live Status</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="bg-surface-container-high border-none rounded-full py-2 pl-10 pr-4 text-sm w-64 focus:ring-2 focus:ring-primary/40 transition-all" placeholder="Search leagues..." type="text"/>
+</div>
+<button class="bg-primary text-on-primary font-headline font-bold text-xs px-6 py-2.5 rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+                        Get Started
+                    </button>
+</div>
+</div>
+<div class="bg-[#f0eee5] dark:bg-[#2a2a24] h-[1px] w-full"></div>
+</header>
+<div class="p-8 max-w-[1440px] mx-auto">
+<!-- Hero Heading -->
+<div class="mb-12">
+<h2 class="font-headline text-5xl font-black text-on-surface tracking-tighter mb-2">Leagues &amp; Social</h2>
+<p class="font-body text-on-surface-variant text-lg max-w-2xl">The pulse of your FPL community. Track standings, analyze the elite, and discuss the latest shifts in the meta.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6 items-start">
+<!-- Main Leaderboard Card (The Editorial Hero) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500 paper-grain">
+<div class="p-8 border-b border-surface-container-low flex justify-between items-end">
+<div>
+<span class="bg-primary-container text-on-primary-container font-label text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-4 inline-block">Global Rank</span>
+<div class="flex items-baseline gap-4">
+<h3 class="font-headline text-7xl font-black text-on-surface tracking-tighter">#12,402</h3>
+<div class="flex items-center text-secondary font-label font-bold text-lg">
+<span class="material-symbols-outlined mr-1">trending_up</span>
+<span>+4.2k</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label text-on-surface-variant text-sm mb-1 uppercase tracking-tighter">Total Points</p>
+<p class="font-headline text-4xl font-black text-on-surface">1,482</p>
+</div>
+</div>
+<div class="p-0 overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label text-[10px] uppercase tracking-widest">
+<th class="px-8 py-4">Position</th>
+<th class="px-8 py-4">Manager / Team</th>
+<th class="px-8 py-4 text-center">GW Pts</th>
+<th class="px-8 py-4 text-right">Total</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-8 py-6 font-headline font-bold text-primary">01</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User profile avatar icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnYup0Mwo265m53sb80_hSqYJfPoXIQkl2b-q-hVG1Pl_cSz3apqV17xnRENxLSsUXayu-Mn8veUtch5uUlhF_V1DKwHRs9Xqh3ZrCzXLJpDX3YFXHVVDZqHBqS4TaGtQBvatUIxT5TqKwIaKpunoURfRJ0q0COpFrDYN9JDi2wPp0FnkDTv4dMo3LAqXPf_WWoLvsrhwFryok61Tavw08bPCSN1vfIoQaSm2eyEdLfP4z0wj5rlq_VvCsu7_ghpnZPqGqRXlcgHZK"/>
+</div>
+<div>
+<p class="font-headline font-bold text-sm">Magnus Carlsen</p>
+<p class="font-body text-xs text-on-surface-variant">The 64 Squares</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 text-center font-label font-bold text-secondary">78</td>
+<td class="px-8 py-6 text-right font-headline font-black">1,544</td>
+</tr>
+<tr class="bg-primary/5">
+<td class="px-8 py-6 font-headline font-bold text-primary">12k</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User profile photo placeholder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc57kFqP2_1qHIgWn9Z-GCgAn0zF-GC9PwRHjialmkL_8CGSP4PZF1EGNUb9h5z-fp6zFmelMjrXh8GiZPLx_y7OW662-mQwd4-pbPPwRh2ZoiwKL_B8DCN30Cbzp5uButgy1xGibehmlOEu5_5KFDWA-MUyf7BkKtldoMNLEa3-a0nCuj88Nf9knXJmUcc407Aix2Y1OxQPzj9RGzeySXZgyvMwISlT3UA9D-s4-pNjeFUdrkPSO-hJ4LKX5Y9GiNjNPRxZbafrX_"/>
+</div>
+<div>
+<p class="font-headline font-bold text-sm">Alex Kinetic (You)</p>
+<p class="font-body text-xs text-on-surface-variant">Kinetic Editorial</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 text-center font-label font-bold text-secondary">82</td>
+<td class="px-8 py-6 text-right font-headline font-black">1,482</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-8 py-6 font-headline font-bold text-on-surface-variant">42k</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Avatar of a male user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrFW1SEVXaUeu_sv2Fubnn75KEekl7H7wzlrPGG3uRft-FoIj0sL5XOOfiaOUzmgVdP83MY5eA853tTliw5vGohMZoayNrDCtdHLYoMkPp7aPp1oIJAhldjkZ3Kgo2KAklYcHtf1DgUQVbAunRZ5OoJdhXPVPACUKvqehBCvj7V2y78NTjZ5LJuiIWl66lO4wOberN95em9pfYZVvgsTtzrIsVjG5vYVEtU1C0Cqkd_ZeBcYZdLyEmz93VwlSQaQNEMItCpgwJW-d8"/>
+</div>
+<div>
+<p class="font-headline font-bold text-sm">FPL Raptor</p>
+<p class="font-body text-xs text-on-surface-variant">Raptors FC</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 text-center font-label font-bold text-on-surface-variant">61</td>
+<td class="px-8 py-6 text-right font-headline font-black">1,421</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- CEO Leaderboard (Elite Insights) -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<div class="bg-on-surface text-surface rounded-xl p-8 relative overflow-hidden group">
+<div class="absolute -right-8 -top-8 w-48 h-48 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/40 transition-all duration-700"></div>
+<h4 class="font-headline text-2xl font-black mb-1 relative z-10">CEO Leaderboard</h4>
+<p class="font-body text-surface-dim text-sm mb-8 relative z-10 opacity-80">Tracking the world's most analytical managers.</p>
+<div class="space-y-4 relative z-10">
+<div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-white/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="font-label text-xs font-bold text-primary-fixed">01</span>
+<span class="font-headline text-sm font-bold">Data Dave</span>
+</div>
+<span class="font-label text-xs text-secondary-fixed">89.2% ROI</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-white/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="font-label text-xs font-bold text-primary-fixed">02</span>
+<span class="font-headline text-sm font-bold">The Analyst</span>
+</div>
+<span class="font-label text-xs text-secondary-fixed">87.5% ROI</span>
+</div>
+</div>
+<button class="mt-8 w-full py-4 bg-primary text-on-primary font-headline font-bold text-sm rounded-full hover:scale-[1.02] transition-transform">
+                            View Elite Tier
+                        </button>
+</div>
+<!-- Mini-Leagues Card -->
+<div class="bg-surface-container-high rounded-xl p-8">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-headline text-xl font-bold">Mini-Leagues</h4>
+<span class="material-symbols-outlined text-primary cursor-pointer">add_circle</span>
+</div>
+<div class="space-y-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-lowest rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-weight="fill">sports_soccer</span>
+</div>
+<div>
+<p class="font-headline font-bold text-sm">The Office Classic</p>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-tighter">Pos: 2nd / 18 Managers</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-lowest rounded-full flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-weight="fill">groups</span>
+</div>
+<div>
+<p class="font-headline font-bold text-sm">Kinetic Editorial HQ</p>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-tighter">Pos: 14th / 142 Managers</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Community Insights & League Chat (Asymmetric Layout) -->
+<div class="col-span-12 grid grid-cols-12 gap-6 mt-6">
+<div class="col-span-12 md:col-span-5 bg-surface-container-low rounded-xl p-8">
+<h4 class="font-headline text-2xl font-black mb-6">Community Insights</h4>
+<div class="space-y-6">
+<div class="p-6 bg-surface-container-lowest rounded-lg">
+<p class="font-headline text-lg font-bold text-primary mb-2">"The Palmer Pivot"</p>
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">Top 10k managers are moving away from 3-man midfields to 4-man blocks centered around Cole Palmer's recent underlying metrics.</p>
+<div class="mt-4 flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">forum</span>
+<span class="text-[10px] font-label font-bold uppercase tracking-widest">142 Comments</span>
+</div>
+</div>
+<div class="p-6 bg-surface-container-lowest rounded-lg">
+<p class="font-headline text-lg font-bold text-on-surface mb-2">Wildcard Windows</p>
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">GW24 is trending as the primary wildcard activation point for optimal Bench Boost synergy in GW29.</p>
+</div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-7 bg-surface-container-lowest rounded-xl flex flex-col h-[500px] border border-surface-container-low shadow-sm overflow-hidden">
+<div class="p-6 border-b border-surface-container-low bg-surface flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-3 h-3 rounded-full bg-secondary animate-pulse"></div>
+<h4 class="font-headline font-bold">Kinetic Live Chat</h4>
+</div>
+<span class="font-label text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">428 Active Managers</span>
+</div>
+<div class="flex-1 p-6 overflow-y-auto space-y-6">
+<!-- Chat Bubble (Other) -->
+<div class="flex gap-4 max-w-[80%]">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Female user portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAIp6kv6hcIqo4xYJyC0iCVkFV5GrfUrzix8WVBfjujDC8cmKo4pK3DfLsnKKzMdykt2CdT68VJqv5N-nDXxfmYY-p_-SGOhCv53iSFktQNur6TocOneFLKbReOI-cblUW9-tb1xH2T1A3Mqz6yqnrAxcMxyyyHVgO0cDQKI36SgjQdwfsQONWHTJWVfBpEyIYhlG1KPmYRJ_gau_3OQxz-c05sOocOrlj751N4MDrmFJ13oYQVAoZLqgbVC98wJ8W9xhnuxx3Sqn_"/>
+</div>
+<div class="space-y-1">
+<p class="font-label text-[10px] font-bold text-on-surface-variant">FPL_ROBIN</p>
+<div class="bg-surface-container-high px-4 py-3 rounded-2xl rounded-tl-none">
+<p class="font-body text-sm text-on-surface">Is anyone else looking at Neto for the double gameweek? The stats are insane but the injury history is scary.</p>
+</div>
+</div>
+</div>
+<!-- Chat Bubble (User) -->
+<div class="flex gap-4 max-w-[80%] ml-auto flex-row-reverse">
+<div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white font-headline text-xs">AK</div>
+<div class="space-y-1 text-right">
+<p class="font-label text-[10px] font-bold text-primary">ALEX KINETIC (YOU)</p>
+<div class="bg-primary text-on-primary px-4 py-3 rounded-2xl rounded-tr-none">
+<p class="font-body text-sm">I've got him on my radar, but the xG per 90 is slightly inflated by those penalty involvements. Keeping an eye on the Friday pressers.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 bg-surface-container-low border-t border-surface-container-high">
+<div class="flex gap-4 items-center">
+<input class="flex-1 bg-surface-container-lowest border-none rounded-xl py-4 px-6 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Share your strategy..." type="text"/>
+<button class="w-12 h-12 bg-primary text-on-primary rounded-xl flex items-center justify-center hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB (Suppressed based on context rule: Leagues is primary but Chat focus implies suppression if needed. Added here for navigation ease on mobile/tablet) -->
+<div class="fixed bottom-8 right-8 z-50 md:hidden">
+<button class="w-16 h-16 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">chat</span>
+</button>
+</div>
+</body></html>

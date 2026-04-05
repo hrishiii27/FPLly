@@ -11,3 +11,5 @@ scikit-learn
 easyocr
 xgboost
 certifi
+Flask-Caching
+Flask-SQLAlchemy

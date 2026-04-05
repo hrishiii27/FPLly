@@ -41,6 +41,9 @@ class FixtureAnalysis:
     # Double/Blank gameweek flags
     has_double_gw: bool
     has_blank_gw: bool
+    
+    # Next-GW specific fixture count (0=BGW, 1=normal, 2=DGW)
+    next_gw_fixture_count: int
 
 
 class FixtureAnalysisAgent:
@@ -99,14 +102,18 @@ class FixtureAnalysisAgent:
         
         fixture_run = self._get_fixture_run(player.team_id)
         
-        # Handle case where no fixtures found
+        # Count how many fixtures this team has in the immediate next GW
+        next_gw_fixtures = [f for f in fixture_run if f["gw"] == self.data.next_gw]
+        next_gw_fixture_count = len(next_gw_fixtures)
+        
+        # Handle case where no fixtures found at all
         if not fixture_run:
             return FixtureAnalysis(
                 player_id=player.id,
                 player_name=player.web_name,
                 team=player.team_name,
                 team_id=player.team_id,
-                next_opponent="TBD",
+                next_opponent="BLANK",
                 next_opponent_id=0,
                 next_gw=self.data.next_gw,
                 is_home=True,
@@ -120,7 +127,36 @@ class FixtureAnalysisAgent:
                 hard_fixtures_count=0,
                 fixture_swing_score=50.0,
                 has_double_gw=False,
-                has_blank_gw=True
+                has_blank_gw=True,
+                next_gw_fixture_count=0
+            )
+        
+        # Handle BGW: team has future fixtures but NOT in next_gw
+        if next_gw_fixture_count == 0:
+            # Use the first future fixture for analysis context
+            first_future = fixture_run[0]
+            next_opp = self.data.teams.get(first_future["opponent_id"])
+            return FixtureAnalysis(
+                player_id=player.id,
+                player_name=player.web_name,
+                team=player.team_name,
+                team_id=player.team_id,
+                next_opponent="BLANK",
+                next_opponent_id=0,
+                next_gw=self.data.next_gw,
+                is_home=True,
+                fdr=3,
+                rating="Medium",
+                opponent_attack_strength=1100,
+                opponent_defence_strength=1100,
+                fixture_run=fixture_run,
+                avg_fdr_5gw=sum(f["fdr"] for f in fixture_run) / len(fixture_run),
+                easy_fixtures_count=len([f for f in fixture_run if f["fdr"] <= 2]),
+                hard_fixtures_count=len([f for f in fixture_run if f["fdr"] >= 4]),
+                fixture_swing_score=50.0,
+                has_double_gw=any(len([g for g in fixture_run if g["gw"] == gw]) > 1 for gw in set(f["gw"] for f in fixture_run)),
+                has_blank_gw=True,
+                next_gw_fixture_count=0
             )
         
         # Next fixture analysis
@@ -176,7 +212,8 @@ class FixtureAnalysisAgent:
             hard_fixtures_count=hard_count,
             fixture_swing_score=round(fixture_swing, 1),
             has_double_gw=has_double,
-            has_blank_gw=has_blank
+            has_blank_gw=has_blank,
+            next_gw_fixture_count=next_gw_fixture_count
         )
         
         self.analyses[player.id] = analysis

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FPL Kinetic | Optimal XI Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&amp;family=Manrope:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "outline": "#82807b",
+              "error-container": "#f74b6d",
+              "tertiary-fixed": "#ff909c",
+              "surface-dim": "#e5e2d9",
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#005e3a",
+              "surface-container-high": "#f0eee5",
+              "on-primary-container": "#220076",
+              "secondary-dim": "#00663f",
+              "on-primary-fixed-variant": "#2b0090",
+              "on-tertiary-fixed": "#39000c",
+              "surface-container": "#f6f3eb",
+              "secondary-fixed": "#78fbb6",
+              "on-tertiary": "#ffffff",
+              "inverse-surface": "#0e0e0b",
+              "on-background": "#383833",
+              "error-dim": "#a70138",
+              "primary-dim": "#5621f3",
+              "on-secondary-fixed-variant": "#006941",
+              "on-surface-variant": "#65645f",
+              "on-primary-fixed": "#000000",
+              "surface": "#fdffda",
+              "tertiary-container": "#ff909c",
+              "on-secondary-fixed": "#00492c",
+              "secondary": "#007348",
+              "secondary-container": "#78fbb6",
+              "tertiary": "#c31c45",
+              "on-error-container": "#510017",
+              "primary-fixed": "#a292ff",
+              "on-tertiary-container": "#68001e",
+              "on-primary": "#ffffff",
+              "tertiary-fixed-dim": "#ff7989",
+              "surface-tint": "#6236ff",
+              "surface-bright": "#fdffda",
+              "surface-container-lowest": "#ffffff",
+              "background": "#fdffda",
+              "inverse-primary": "#927dff",
+              "surface-variant": "#ebe8df",
+              "primary-fixed-dim": "#9581ff",
+              "tertiary-dim": "#b1063a",
+              "on-surface": "#383833",
+              "on-tertiary-fixed-variant": "#780024",
+              "surface-container-highest": "#ebe8df",
+              "secondary-fixed-dim": "#69eca8",
+              "primary": "#6236ff",
+              "outline-variant": "#bbb9b3",
+              "surface-container-low": "#fcf9f1",
+              "inverse-on-surface": "#9f9d97",
+              "on-error": "#ffffff",
+              "primary-container": "#a292ff",
+              "error": "#c12048"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Manrope"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.pitch-pattern {
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 10%, rgba(255, 255, 255, 0.03) 10%, rgba(255, 255, 255, 0.03) 20%)
+    }
+.editorial-grain {
+    position: relative
+    }
+.editorial-grain::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBSDiL4thF_zyJKPQ_3Tgo-rzH594p9BNFiiVElQr6-QW8PBlp5zmETEP6cQxYNbeeeeBwmbOsnVuqDI67C1iB3lZVCa5Gr4m-_aRyjUShwYRGoZ4X-L9wC87itrdWZRSdO62X0RU54j9UTppGUiOpOguKum0_GX212yGowZ9Lcmt7an5lYiq4kLO_0cpr5PNQ3oKiemWh6wETRiGibrfG7bP-PdHfG5hT_DkIGqOm_cTQhE9HO9V3cXuDo4Blr-3h-zTRKZVifDQyk);
+    opacity: 0.03;
+    pointer-events: none
+    }</style>
+</head>
+<body class="bg-background text-on-background font-body editorial-grain min-h-screen">
+<!-- Top Navigation -->
+<header class="flex justify-between items-center w-full px-8 py-4 max-w-[1920px] mx-auto sticky top-0 z-50 bg-[#fdffda] dark:bg-stone-900 font-headline font-bold tracking-tight">
+<div class="text-2xl font-black text-[#6236ff] dark:text-[#a292ff] tracking-tighter italic">FPL Kinetic</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200" href="#">Analysis</a>
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200" href="#">My Team</a>
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200" href="#">Predictions</a>
+<a class="text-[#6236ff] dark:text-[#a292ff] border-b-4 border-[#6236ff] pb-1" href="#">Optimal XI</a>
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200" href="#">Differentials</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-[#f0eee5] transition-all">
+<span class="material-symbols-outlined text-on-surface">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high ring-2 ring-primary">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="Close up portrait of a male football manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR27BmQGpRSFrj5VuEklJx96dHcJIioQDzJZINKYQXud85lHw_fVgC2my2230y91tKnETWoT8CwsOIj9zloJzZqunQ5BHJBhfkFiZij7YUqUeGel76rdqwCrnLxUO2Vkb5hBhRzAU2K8ryxheRzzDEwmU8Yj5ZjqcC72EWV1OtGFt_7QC5968UDumKWmZpMppwXSXGzdDnPamiJtU8O8dGLdUh9X-PrMPyxug_OQcezJiXxPTfjQDgMc1hE4t4t6tDC5ZXTKLHC_dt"/>
+</div>
+</div>
+</header>
+<main class="max-w-[1920px] mx-auto flex h-[calc(100vh-80px)] overflow-hidden">
+<!-- Sidebar Navigation (Desktop) -->
+<aside class="hidden lg:flex flex-col h-full p-6 gap-8 bg-[#fcf9f1] dark:bg-stone-900 w-64 shadow-[20px_0_40px_rgba(56,56,51,0.03)] font-body font-semibold">
+<div class="space-y-1">
+<div class="flex items-center gap-3 p-3">
+<img alt="FPL Logo" class="w-8 h-8 rounded-lg" data-alt="Circular logo with a minimal football icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAv1HdTlkkCSebjm8nBiGksmOpLSiLjBJosIPGq3s7xj1d8M9DGU4w-FZcz7PaspWOnMUafEfazm08bTiQNMaQI4y6Dvm9TFy9-VB7TQBQ58VpwFNQXrSLIfxEMKFEoJka5msA292uyCpqpT5R_EaAw3CKwmwzmuy85MFA5P2lz6fUYQYjT5cbrf3LI-jldd3jiWJgsNqibZf36P6yVNdS1tEPXqCkkrXdbeyribLkgDL4JSAdVOXlL6e_T2mUqu2ekRGyjH3DR7de_"/>
+<div>
+<p class="text-xs font-label uppercase tracking-widest text-outline">Kinetic Editorial</p>
+<p class="text-sm font-bold text-primary">Gameweek 24 Live</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 p-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span>Ownership</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Squad</span>
+</a>
+<a class="flex items-center gap-3 p-3 bg-[#6236ff] text-white rounded-xl shadow-lg shadow-[#6236ff]/20" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span>Forecasts</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">star</span>
+<span>Dream XI</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span>Gems</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 space-y-4">
+<div class="bg-primary/5 p-4 rounded-xl">
+<p class="text-xs font-label text-primary font-bold mb-2">PRO FEATURE</p>
+<p class="text-xs text-on-surface mb-3 leading-relaxed">Unlock deep-data AI simulations for your specific team ID.</p>
+<button class="w-full bg-primary text-on-primary py-2 rounded-lg font-headline text-sm tracking-tight active:scale-95 transition-all">Upgrade to Pro</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="flex-1 overflow-y-auto p-4 md:p-10 flex flex-col gap-8">
+<!-- Hero Stats / Editorial Header -->
+<div class="flex flex-col md:flex-row justify-between items-end gap-6">
+<div>
+<h1 class="font-headline text-5xl md:text-7xl font-black text-on-background tracking-tighter leading-none mb-4 uppercase">
+                        Optimal <span class="text-primary italic">XI</span>
+</h1>
+<p class="font-body text-xl text-on-surface-variant max-w-xl">
+                        AI-generated algorithmic peak performance model for GW24. Focused on xG/xPTS variance over the last 4 fixtures.
+                    </p>
+</div>
+<div class="flex gap-4">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-secondary min-w-[180px]">
+<p class="font-label text-xs uppercase tracking-widest text-outline mb-1">Expected Pts</p>
+<p class="font-headline text-4xl font-bold text-on-background">78.4</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-primary min-w-[180px]">
+<p class="font-label text-xs uppercase tracking-widest text-outline mb-1">Risk Score</p>
+<p class="font-headline text-4xl font-bold text-primary">Low</p>
+</div>
+</div>
+</div>
+<!-- The Pitch Layout -->
+<div class="relative w-full aspect-[4/3] md:aspect-[16/9] bg-secondary-dim rounded-[2rem] overflow-hidden shadow-2xl p-8 pitch-pattern">
+<!-- Pitch Markings -->
+<div class="absolute inset-8 border-2 border-white/20 rounded-lg pointer-events-none"></div>
+<div class="absolute inset-y-8 left-1/2 w-0.5 bg-white/20 pointer-events-none"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border-2 border-white/20 pointer-events-none"></div>
+<!-- Player Layout Grid (Asymmetric & Tactical) -->
+<div class="relative h-full w-full grid grid-cols-5 grid-rows-4 gap-4">
+<!-- GK -->
+<div class="col-start-1 row-start-2 row-span-2 flex flex-col items-center justify-center -translate-x-4">
+<div class="relative group">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/10 backdrop-blur-md p-1 border-2 border-white/30 transform group-hover:scale-110 transition-all cursor-pointer">
+<img alt="Alisson" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a goalkeeper in yellow jersey" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsXnxnv-joLDVMtGHvv3DaGyPDwwWz9O_o2via1eDe3CykuEfiRzFLxho5-_x0HODh_reZ6XCTeCDW0-ScgefOgD__w4u6MjCPqVRxFr5q2LWdccNdpmY5t9n23r6ZjnuPvt-COvw3gn8AAXJ5u5BhmQNCf8HyV7Y9Qar-1UleTjaAxLN8ug9nez9lb2Edu7pJqRVHwaUAffS8wgUSZXH9saLbiWQO1LLtlmLUtj0naKlfOTXuIE_2c8nhjk9_sJc56hh5AkAc8w9O"/>
+</div>
+<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg whitespace-nowrap">
+<p class="font-label text-[10px] text-outline leading-none text-center">LIV</p>
+<p class="font-body text-xs font-bold text-on-surface text-center">Alisson</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">5.8 xPts</p>
+</div>
+</div>
+</div>
+<!-- DEF -->
+<div class="col-start-2 row-start-1 flex items-center justify-center">
+<!-- Player Component -->
+<div class="flex flex-col items-center">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform">
+<img alt="Trippier" class="w-full h-full rounded-full object-cover" data-alt="Footballer portrait against abstract background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwoYrUzR_Q9CTyiRfTLPh7J65T19Kjjuk7nnyQtRqnP6r-bdLjEhX-eNcuY1vNCPLCb-xhqiwc8_Q11z39vQxPdkVWXV9Ubs2k1VHY0JG4dbGabLh9GCJx4upa3pddPTgBOK4QnD7oMtWggNShppKWDs9FMppNgHdaw7Qcf2OJZRQujQjBESoBUv089nJN8gxZJW7CIu7vcfey5NtfBDy6DKnUq1x4EffdfeSjlG9Yv18ZiFB-itAYo0NmOcEbQDXxa3jKr9-ryZ-j"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">NEW</p>
+<p class="font-body text-xs font-bold text-center">Trippier</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">6.2 xPts</p>
+</div>
+</div>
+</div>
+<div class="col-start-2 row-start-2 flex items-center justify-center translate-x-12">
+<div class="flex flex-col items-center">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform">
+<img alt="Saliba" class="w-full h-full rounded-full object-cover" data-alt="Athlete profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCbU6Z1V1wR3mmKAog9Pg8k6NO9vzFy0F5-yeC-hHAYExKhZdRPbUIiqA9qf_7LQUD3qdJvVaVylFuc72k0_a_diMVCrAInDtyBeli2yFT81OZZCJhhHnIx9LPqK7vwZQDVQZgHO7SG8d0UHPAopRAHmoxD3qhtWF-_yosyC_DxtNPyj9lHd_lbEYsr0Ks0HSfAiDO-MKTlsV400fC7kFRK8XFs09pDbG0F7htwiMD9aoToCLBEyz_ROLcMKh8R9eD5NpR4CUbK8rY"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">ARS</p>
+<p class="font-body text-xs font-bold text-center">Saliba</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">4.5 xPts</p>
+</div>
+</div>
+</div>
+<div class="col-start-2 row-start-4 flex items-center justify-center">
+<div class="flex flex-col items-center">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform">
+<img alt="Estupinan" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a male player" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCO4cQKlOGwrSmSYkWcd3fC0InIuFeZrv51KvdPGsKldC6US-zud8SrnZU-YiN0ZY5iBX_spIs4vVZqqxQ0EyZ-ivl--siz1fSQcKa2wke9_6HGWSLYl9XszxvMeRS3lGgWhF5AevOb7HmDDoOEaIprefuz5ZgYHfsFSGTcYp1yWI1lA6wtM5nSazVSyenCfRrBAu0Xht2MjuehPgLaC_gbdCLMhP8Hu8gT0K-4Q-8RKhSThuJOoEJyldTtF41HC4vEcJXnnoM_rJ9e"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">BHA</p>
+<p class="font-body text-xs font-bold text-center">Estupiñán</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">5.1 xPts</p>
+</div>
+</div>
+</div>
+<!-- MID -->
+<div class="col-start-3 row-start-1 flex items-center justify-center -translate-x-8">
+<div class="flex flex-col items-center">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform">
+<img alt="Salah" class="w-full h-full rounded-full object-cover" data-alt="Professional athlete profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAisPlk6Png4YavkqNT1o6DBnNIZFcZlz_gKn_FlgmGQWAbDiOmu0CDEs2I34GMliURb91744h-iXkYzCaij5b9MQbsMT9TSwVczsMax_3ZC_NDOKjSP2j9CcHJaUHTFzw3q4451ZivrivlGYpTR9UWumj24cXYsSOhsFYJn1jH_fNCSgsydUgsTnWft3SfCMn5fTsXTDcDyAbvS0BAldgvXvU-IVvHHt17YRDwzUE6ji2ub7Q--YiiKHhtkHZrX3arXEVDBNPKQUTo"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">LIV</p>
+<p class="font-body text-xs font-bold text-center">Salah</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">8.4 xPts</p>
+</div>
+</div>
+</div>
+<div class="col-start-3 row-start-2 flex items-center justify-center translate-x-16">
+<div class="flex flex-col items-center">
+<div class="relative">
+<div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary p-1 hover:scale-110 transition-transform shadow-2xl">
+<img alt="Foden" class="w-full h-full rounded-full object-cover" data-alt="Player profile portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYEmwWy1vYYe5drQyOhI15ChYtXp7Vk2DUesnp430A_uF2_mNZCEiLaulK12LqW9yvf9XxRpjUelarmlXWziAbAsNjklNVBjbx_8cmyBOXRgNw0D6TPJlDc7l5RQr5YDB8JsLVXTirI75-pxoz-YpBatmdVe8CiMXPutqTKB2ENGqTAXynCKISoeFSPFq9rLEvTBPUFF9eFQsP-eExq80ib3KbpuvVqDVadXEasun9YYBPgRKeAcSm-3dx5pU9Gv5wBLV6wBjH2r4F"/>
+</div>
+<div class="absolute -top-2 -right-2 bg-primary text-white p-1 rounded-full text-[10px] font-black w-6 h-6 flex items-center justify-center border-2 border-white">C</div>
+</div>
+<div class="mt-2 bg-primary text-on-primary px-4 py-1 rounded-full shadow-xl">
+<p class="font-label text-[10px] text-white/70 text-center uppercase">MCI</p>
+<p class="font-body text-xs font-bold text-center">Foden</p>
+<p class="font-label text-[11px] text-secondary-container font-bold text-center">12.1 xPts</p>
+</div>
+</div>
+</div>
+<div class="col-start-3 row-start-3 flex items-center justify-center -translate-x-4">
+<div class="flex flex-col items-center">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform">
+<img alt="Saka" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a young athlete" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA74BuYoZADoVjrBTy5suoyxYWCq6f_cwh2JFIJcHbpL-2oM-SoI5gnaeIcEZmoURUw42dR0GhjFNvE4IOD-gjqY9H0cegp_79UdFWmNxun3UiWXJsW7xmLfvoa9Lq4SzjPhg7yCud_tUZQpReKGVE3MJuFJL0T4XsbkkGeSR8zwNo8EKm2WpbLiS8wcZfWwI1rIp6fqUoCv770a_WzyBnrJbwr3Jf0RngEfBnsJA3uzEnVJnRUhsPTKLPAI8GYl5U9FxFleYK7X7fB"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">ARS</p>
+<p class="font-body text-xs font-bold text-center">Saka</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">7.9 xPts</p>
+</div>
+</div>
+</div>
+<div class="col-start-3 row-start-4 flex items-center justify-center translate-x-12">
+<div class="flex flex-col items-center">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform">
+<img alt="Palmer" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a smiling young man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDS5wflwon_wY10AuFS3ZYm9HOSFYwmxK3LyG9j8Dc9b6si0naTgjVnqlSeW7tHYa3kXd27jHJomcgu7s2TyW0pN3l616XR3ANzuETw6o8CD5Slpv08cRzN_SHpX9U667MHQihDDEcD-0A3fQK9OHrHW5dPyNcBjNIoHaxrd599v58QJSKVYlRVCVKdbjU4GeceRebENhFVOVTfjOzBSTHji8nRvUR7S8wjvbX04QPD9KZDlYnZxkxXjzoiTsc8_EvRnoDQRI6p1NkE"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">CHE</p>
+<p class="font-body text-xs font-bold text-center">Palmer</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">7.2 xPts</p>
+</div>
+</div>
+</div>
+<!-- FWD -->
+<div class="col-start-4 row-start-2 flex items-center justify-center translate-x-8">
+<div class="flex flex-col items-center">
+<div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform shadow-2xl">
+<img alt="Haaland" class="w-full h-full rounded-full object-cover" data-alt="Powerful looking athlete portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMx2oo69DNRKsHmUk6q64658JHZEqHMmgcIgp65QbyxMyZLQ_ts7OX2hL8xQH_MPKEgqPCWeskzrMLsZMkv0do_zNuEn82o7bCJqlGde0VLZQHzdNp9tZcqC_O9hJPHa_at2suVoZuM5JkakoROudV4JbI09GjEHQ0pdc84WjPELroA4ymrZ3WItdWPoiGnO4IeRlLg2KkMUw0tXGB4_SKFxDYop5IdqYl9AHEag0c9bnZJhEoGZdWU9wORE7yyQ6XwPk7WGs4-C5M"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">MCI</p>
+<p class="font-body text-xs font-bold text-center">Haaland</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">9.8 xPts</p>
+</div>
+</div>
+</div>
+<div class="col-start-4 row-start-3 flex items-center justify-center -translate-x-12 translate-y-8">
+<div class="flex flex-col items-center">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/30 p-1 hover:scale-110 transition-transform shadow-lg">
+<img alt="Watkins" class="w-full h-full rounded-full object-cover" data-alt="Man's side profile portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7EQ0c6i4P9I2AUCl9oQF56RmlI6U2fN71fEiWq7MIhrDwPHEEgqkWib0ykgDkgYBulZpupd7RhezF3wTqy9K_EQUTDl1WDND5wN2T5-XCUhKKMe0YB30L5lVvbFG8Y3FDzGhuUg321NK3kto-1D2-jLg_0HNIOdlBrZS2CuMiqKi88goHN9v7LxWspkZQ_8xcJFw6noWBfeHHBqJfoVDS-KIkY08TUHrzmNzIKdFYyfjKT_B4FDyQCoj4R297P22Jp1P6K0tBmcOu"/>
+</div>
+<div class="mt-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-lg">
+<p class="font-label text-[10px] text-outline text-center">AVL</p>
+<p class="font-body text-xs font-bold text-center">Watkins</p>
+<p class="font-label text-[11px] text-secondary font-bold text-center">6.6 xPts</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Captaincy Pulse Overlay -->
+<div class="absolute bottom-6 left-6 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl flex items-center gap-4 max-w-xs">
+<div class="relative w-12 h-12">
+<div class="absolute inset-0 bg-primary/40 rounded-full animate-ping"></div>
+<div class="relative w-full h-full bg-primary rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+</div>
+<div>
+<p class="font-label text-[10px] text-white/60 uppercase tracking-widest">Captaincy Pulse</p>
+<p class="font-body text-sm font-bold text-white">Phil Foden (84% Confidence)</p>
+</div>
+</div>
+</div>
+<!-- Bottom Data Bento -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Recommendations -->
+<div class="md:col-span-2 bg-surface-container-low p-8 rounded-[2rem] flex flex-col gap-6">
+<div class="flex justify-between items-center">
+<h3 class="font-headline text-2xl font-black italic text-on-surface uppercase tracking-tight">Transfer Strategy</h3>
+<span class="font-label text-xs font-bold px-3 py-1 bg-primary text-on-primary rounded-full">GW24 Priority</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Optimal In -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary">trending_up</span>
+<p class="font-headline text-sm uppercase tracking-wide">Optimal In</p>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container">
+<img alt="Jota" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a young footballer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiK1mArea3CE5wVhVUpsoP1vHzQM2gE323m9uqBZtmaIEzWy00UfYN51fKuUR8mG_q3sPeZ0VsuT8qRvRuSkw7oprx0V28as7zme1pLcTL5MfR_yyS-QJYl8fvToF-GojrIWq6vZe5U1VcwD3gIZdMgSkHcipsUFhWlD-fVt5B8UE8pMfsLm7eHV1mpi-OjWTgcLaXy4X8MhpX2CgHMVmCSgaLRT5jm3BZkEqZ3QGPIiToMmRC9PvDeAxdvaNqVx_kOziaM9R1PehT"/>
+</div>
+<div>
+<p class="font-body text-sm font-bold">Diogo Jota</p>
+<p class="font-label text-[10px] text-outline">£8.2m • LIV</p>
+</div>
+</div>
+<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">+14% xPts</span>
+</div>
+<div class="flex items-center justify-between opacity-60">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container">
+<img alt="Hojlund" class="w-full h-full rounded-full object-cover" data-alt="Profile of a male athlete" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2LUYiFk32v41k5ZO4D-YfYBwMazENl810aM8nQoIYBSBQNpGrhNYoZvyFbsu-Qgs9f7mPPDShJCzAnjE3Jqk_yCyzdc7LoGcVe9TfoC9ZMPFdaB46FShc1BcFhaop_RPX9LvZEJINwAF5yug1emlVWFze8NT3sgbkEBKnNBFlVB07ruMs4sjHuBra4J22XsS_Q8Bb-JTd9cG1BCF7qy4Z2Ah6HRBLXs37z-l-FkmzjEYanLO-EHw1xn0NUtOKn-GVv1p08GB3gpcI"/>
+</div>
+<div>
+<p class="font-body text-sm font-bold">Højlund</p>
+<p class="font-label text-[10px] text-outline">£7.1m • MUN</p>
+</div>
+</div>
+<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">+9% xPts</span>
+</div>
+</div>
+</div>
+<!-- Sell High -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-tertiary">trending_down</span>
+<p class="font-headline text-sm uppercase tracking-wide">Sell High</p>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container">
+<img alt="Bowen" class="w-full h-full rounded-full object-cover" data-alt="Athlete side view photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPV070isNkk6LX5c4h9OnMf0cgivf7ZXZdIslZgqYuMYZ8FPVJke63lEcultu-jGo0D4cGMHuAncgWA3FSKnTNvQuU_Rt3XeYVMGAi_QrpzU0Dqdn_p_wpKpMIY5esXkfp5zg_b_bbLERHaTnGJUXhAp5ukQs21zjQ3iqTklQ-1h3LIio-mTID9d-ZqRywCkjhVEuCH3QCaRtvm-WeLLH89lqedtWqgfCwf5B7Acww7DhZFSsdfT-xEvfK_CEueCU6YCm0QV5oNojg"/>
+</div>
+<div>
+<p class="font-body text-sm font-bold">Jarrod Bowen</p>
+<p class="font-label text-[10px] text-outline">£8.0m • WHU</p>
+</div>
+</div>
+<span class="bg-tertiary/10 text-tertiary px-2 py-0.5 rounded text-[10px] font-bold">-22% ROI</span>
+</div>
+<div class="flex items-center justify-between opacity-60">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container">
+<img alt="Zinchenko" class="w-full h-full rounded-full object-cover" data-alt="Portrait of professional sports player" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNwlek-dy85n2S6rZjKYFlj0O2mOGaeWfpGVPmfbS0VOArbA35PoR8Mj94j3jMSA_HcZ-6k9Zu47dyDAa2x82-XGkyZzdXAhmEMS0I6Dnfj5l1W8cVSx0crcZvd-iuLhlbKn5WNhaUCaMFEOa4wKDOdGHvK1ajQpCkzcvDs36F4QsGLPQ3z9Kdud-_-u5R5TgrTHD6ZiJDpQeY_hjz3sgIOejAKdHVsyoYaEL8_Pkf589DEVGZ9X_Kltvdaf0LhrIHWQ7hloe62b9w"/>
+</div>
+<div>
+<p class="font-body text-sm font-bold">Zinchenko</p>
+<p class="font-label text-[10px] text-outline">£5.1m • ARS</p>
+</div>
+</div>
+<span class="bg-tertiary/10 text-tertiary px-2 py-0.5 rounded text-[10px] font-bold">-5% ROI</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Fixture Swing Card -->
+<div class="bg-primary p-8 rounded-[2rem] text-on-primary flex flex-col justify-between shadow-xl shadow-primary/20">
+<div>
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-secondary-container">calendar_month</span>
+<h3 class="font-headline text-xl uppercase italic tracking-tighter">Fixture Swing</h3>
+</div>
+<p class="font-body text-3xl font-black leading-none mb-2">Liverpool (LIV)</p>
+<p class="font-label text-xs text-primary-fixed leading-relaxed opacity-80 uppercase tracking-widest">Next 3 Fixtures: BUR(H), BRE(A), LUT(H)</p>
+</div>
+<div class="mt-8">
+<div class="h-2 w-full bg-primary-dim rounded-full overflow-hidden mb-2">
+<div class="h-full bg-secondary-container w-[92%]"></div>
+</div>
+<p class="font-label text-[10px] font-bold tracking-widest">DIFFICULTY RATING: 92/100 (VERY EASY)</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Nav Bar (Mobile Only) -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-high px-6 py-4 flex justify-around items-center z-50 rounded-t-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">insights</span>
+<span class="text-[10px] font-bold">Optimal</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-outline">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px] font-bold">Squad</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-outline">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="text-[10px] font-bold">Stats</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-outline">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-[10px] font-bold">Profile</span>
+</button>
+</div>
+</body></html>

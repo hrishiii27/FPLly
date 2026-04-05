@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&amp;family=Manrope:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "outline": "#82807b",
+              "error-container": "#f74b6d",
+              "tertiary-fixed": "#ff909c",
+              "surface-dim": "#e5e2d9",
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#005e3a",
+              "surface-container-high": "#f0eee5",
+              "on-primary-container": "#220076",
+              "secondary-dim": "#00663f",
+              "on-primary-fixed-variant": "#2b0090",
+              "on-tertiary-fixed": "#39000c",
+              "surface-container": "#f6f3eb",
+              "secondary-fixed": "#78fbb6",
+              "on-tertiary": "#ffffff",
+              "inverse-surface": "#0e0e0b",
+              "on-background": "#383833",
+              "error-dim": "#a70138",
+              "primary-dim": "#5621f3",
+              "on-secondary-fixed-variant": "#006941",
+              "on-surface-variant": "#65645f",
+              "on-primary-fixed": "#000000",
+              "surface": "#fdffda",
+              "tertiary-container": "#ff909c",
+              "on-secondary-fixed": "#00492c",
+              "secondary": "#007348",
+              "secondary-container": "#78fbb6",
+              "tertiary": "#c31c45",
+              "on-error-container": "#510017",
+              "primary-fixed": "#a292ff",
+              "on-tertiary-container": "#68001e",
+              "on-primary": "#ffffff",
+              "tertiary-fixed-dim": "#ff7989",
+              "surface-tint": "#6236ff",
+              "surface-bright": "#fdffda",
+              "surface-container-lowest": "#ffffff",
+              "background": "#fdffda",
+              "inverse-primary": "#927dff",
+              "surface-variant": "#ebe8df",
+              "primary-fixed-dim": "#9581ff",
+              "tertiary-dim": "#b1063a",
+              "on-surface": "#383833",
+              "on-tertiary-fixed-variant": "#780024",
+              "surface-container-highest": "#ebe8df",
+              "secondary-fixed-dim": "#69eca8",
+              "primary": "#6236ff",
+              "outline-variant": "#bbb9b3",
+              "surface-container-low": "#fcf9f1",
+              "inverse-on-surface": "#9f9d97",
+              "on-error": "#ffffff",
+              "primary-container": "#a292ff",
+              "error": "#c12048"
+            },
+            fontFamily: {
+              "headline": ["Epilogue", "sans-serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Space Grotesk", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24 }
+        .editorial-grain { position: relative }
+        .editorial-grain::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA91NcDFZvRyFixjNrtfbiFFe9vQQAo9BC5ZbmsEv5mVvRN_chXGW7Uc7Yxv_Fxl_AGrdMnC0aojqHMeLfzvn5KqdoaAkgk0OopdijU5G0p89M5SxGRoz_py0RMY6Ir7k1CHpfJ8-TrYj2My573t1-Q2DnIL4k9YfkcmjXBvS19FOFgtXgO5FGiBuoCl8db2ZOKC_QrZfEJcxe_KLajAvpBrd9u9InpZBtBE6hGZj0q33Sb0uXAw8bHwxNqpHN4lyCO3401oDyjMvcq);
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body editorial-grain min-h-screen">
+<!-- Top Navigation (Shared Component Integration) -->
+<header class="bg-[#fcf9f1] dark:bg-stone-800/50 flex justify-between items-center w-full px-8 py-4 max-w-[1920px] mx-auto sticky top-0 z-50">
+<div class="text-2xl font-black text-[#6236ff] dark:text-[#a292ff] tracking-tighter italic font-headline">FPL Kinetic</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="font-headline font-bold tracking-tight text-[#6236ff] dark:text-[#a292ff] border-b-4 border-[#6236ff] pb-1" href="#">Analysis</a>
+<a class="font-headline font-bold tracking-tight text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] transition-colors duration-200" href="#">My Team</a>
+<a class="font-headline font-bold tracking-tight text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] transition-colors duration-200" href="#">Predictions</a>
+<a class="font-headline font-bold tracking-tight text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] transition-colors duration-200" href="#">Optimal XI</a>
+<a class="font-headline font-bold tracking-tight text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] transition-colors duration-200" href="#">Differentials</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-[#f0eee5] rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="notifications">notifications</span></button>
+<button class="p-2 hover:bg-[#f0eee5] rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span></button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-highest border-2 border-primary/20">
+<img alt="Manager Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp0mQ79GNYHwWk4WT65ZKYTcsoK3TvPb_yg4KgRBmQ29RsRXPIZZstoltrkvGjc4fzm6hLy9-P_gnd7fHujveFgWM3GANTlhfeOtI2G9oZXKIzGUwaL7uiAN8NzPPDhLOLx7rwdYDa-zOKzSo1gwhyOylWSXJ1pBM4_bfEzzULzVbB8ezz-lt9uFi2W4S3Thon9IDwBkzz4msfMljspeBdTzM8HNyaYVnPzYaeK_DHfMQ1nJmay7AhA55Vdxd_Km4sQXJMw8FTv1zw"/>
+</div>
+</div>
+</header>
+<div class="flex max-w-[1920px] mx-auto min-h-screen">
+<!-- Side Navigation (Shared Component Integration) -->
+<aside class="hidden lg:flex flex-col h-screen w-64 bg-[#fcf9f1] dark:bg-stone-900 p-6 gap-8 sticky top-20 shadow-[20px_0_40px_rgba(56,56,51,0.03)] shrink-0">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<h3 class="font-headline font-extrabold text-[#6236ff] leading-none uppercase tracking-tighter">Kinetic Ed.</h3>
+<p class="text-[10px] font-label text-on-surface-variant font-bold">GAMEWEEK 24 LIVE</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 font-body font-semibold">
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span> Ownership
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span> Squad
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span> Forecasts
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="star">star</span> Dream XI
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#6236ff] text-white rounded-xl shadow-lg shadow-[#6236ff]/20" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span> Gems
+                </a>
+</nav>
+<div class="mt-auto pt-8 border-t border-outline-variant/20">
+<div class="bg-primary-container/20 p-4 rounded-xl mb-4">
+<p class="text-xs font-bold text-primary mb-2">PRO CONTENT</p>
+<p class="text-xs text-on-surface-variant mb-3">Unlock the Algorithm's hidden differential engine.</p>
+<button class="w-full py-2 bg-primary text-on-primary rounded-full text-sm font-bold shadow-md hover:scale-[1.02] transition-transform">Upgrade to Pro</button>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-sm" data-icon="settings">settings</span> Settings</a>
+<a class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-sm" data-icon="help_outline">help_outline</span> Support</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-8 md:p-12 overflow-x-hidden bg-background">
+<!-- Header Section -->
+<div class="mb-12">
+<div class="inline-flex items-center bg-secondary-container px-3 py-1 rounded-full mb-4">
+<span class="material-symbols-outlined text-sm mr-2 text-on-secondary-container" data-icon="trending_up">trending_up</span>
+<span class="text-[10px] font-label font-bold text-on-secondary-container tracking-widest uppercase">Differential Finder</span>
+</div>
+<h1 class="font-headline text-5xl md:text-7xl font-black text-on-background tracking-tighter leading-[0.9] mb-6">
+                    THE KINETIC <br/><span class="text-primary italic">SLEEPERS.</span>
+</h1>
+<p class="text-xl text-on-surface-variant max-w-2xl font-body font-medium leading-relaxed">
+                    Analyzing low-ownership assets with high projected output. These are the rank-climbers that your rivals are overlooking.
+                </p>
+</div>
+<!-- Analysis Callout -->
+<div class="bg-surface-container-low p-6 md:p-10 rounded-xl mb-12 flex flex-col md:flex-row gap-8 items-center border-l-8 border-primary">
+<div class="flex-1">
+<h2 class="font-headline text-2xl font-bold mb-2 uppercase italic tracking-tight">Kinetic Analysis: GW24 Outlook</h2>
+<p class="font-body text-on-surface-variant leading-relaxed">Data indicates a major rotation risk for template assets. Our algorithm has identified 4 high-value pivots with ownership under 7% who face struggling defensive blocks this weekend.</p>
+</div>
+<div class="flex gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-lg text-center min-w-[100px] shadow-sm border border-outline-variant/10">
+<span class="block text-primary font-label text-2xl font-bold">14.2</span>
+<span class="text-[10px] font-bold uppercase text-outline">Avg xPts</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg text-center min-w-[100px] shadow-sm border border-outline-variant/10">
+<span class="block text-secondary font-label text-2xl font-bold">2.4%</span>
+<span class="text-[10px] font-bold uppercase text-outline">Ownership</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid - Top Differentials -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+<!-- Main Highlight Player Card -->
+<div class="lg:col-span-2 relative bg-surface-container-lowest rounded-2xl overflow-hidden group shadow-xl shadow-primary/5 border border-outline-variant/10">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none"></div>
+<div class="relative p-8 flex flex-col md:flex-row gap-8">
+<div class="w-full md:w-2/5 shrink-0">
+<div class="aspect-[4/5] bg-surface-container-high rounded-xl overflow-hidden relative shadow-inner">
+<img alt="Player Action Shot" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMoajqcIuaWQvx8Or3AyeutUtXzz5xZGVzLSOXhJ8VcLbuB8pBDJzY3GnNLVEZS6X4hACetsbpnB0Ck72isMDCNeWE_jxg1NGGhQgz-LbDFS6m57_lalT4OoHk0hy-OxGLX67-3djk6XPLUTzMsE-ePc9ALo4nOb2Ymu0FcQnphiZzn171iYm3jQv7yyQom_T84RKC_1y8VyEri7ktid2TI7P0A9uM6j1F4Vm4_nn3PP_ELWZPPKKBgtJXWBDrAdozDKz_JbQlsa8t"/>
+<div class="absolute top-4 left-4 bg-tertiary text-white font-label font-bold px-4 py-1.5 rounded-full text-xs shadow-lg">HOT PICK</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col">
+<div class="mb-auto">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label text-sm font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-3 py-1 rounded-full">MID · CHELSEA</span>
+<span class="bg-surface-container-high px-3 py-1.5 rounded-lg text-xs font-black font-label text-on-surface border border-outline-variant/20">OWN: 3.2%</span>
+</div>
+<h3 class="font-headline text-5xl font-black mb-6 group-hover:text-primary transition-colors leading-none tracking-tighter">Cole Palmer</h3>
+<div class="grid grid-cols-2 gap-6 mb-8">
+<div class="border-l-4 border-outline-variant/30 pl-4 py-1">
+<p class="text-[10px] font-bold text-outline uppercase mb-1 tracking-widest">Price</p>
+<p class="font-label font-bold text-2xl">£5.9m</p>
+</div>
+<div class="border-l-4 border-primary pl-4 py-1">
+<p class="text-[10px] font-bold text-outline uppercase mb-1 tracking-widest">xPts (3GW)</p>
+<p class="font-label font-bold text-2xl text-primary">22.4</p>
+</div>
+<div class="border-l-4 border-secondary pl-4 py-1">
+<p class="text-[10px] font-bold text-outline uppercase mb-1 tracking-widest">Diff Score</p>
+<p class="font-label font-bold text-2xl text-secondary">94</p>
+</div>
+<div class="border-l-4 border-outline-variant/30 pl-4 py-1">
+<p class="text-[10px] font-bold text-outline uppercase mb-1 tracking-widest">FDR</p>
+<div class="flex gap-1.5 items-center mt-2">
+<div class="w-3 h-5 bg-secondary rounded-sm"></div>
+<div class="w-3 h-5 bg-secondary rounded-sm"></div>
+<div class="w-3 h-5 bg-outline-variant/30 rounded-sm"></div>
+<div class="w-3 h-5 bg-outline-variant/30 rounded-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full py-5 bg-primary text-on-primary font-headline font-extrabold uppercase tracking-[0.2em] rounded-xl hover:shadow-2xl hover:shadow-primary/30 transition-all active:scale-95 group-hover:-translate-y-1">Add to Watchlist</button>
+</div>
+</div>
+</div>
+<!-- Secondary Player Cards -->
+<div class="bg-surface-container-lowest p-8 rounded-2xl relative group border border-outline-variant/10 shadow-lg hover:shadow-xl transition-all">
+<div class="flex justify-between items-start mb-8">
+<div class="w-20 h-20 bg-surface-container-high rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
+<img alt="Player Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE0-2fW6YOCa7E7_GPvZKB6AERrmB2hC2HcA09XnKJhXLL5NzFxWz-xUp-W7azEIM6hlChT6Zqh7PwyrOybKJZKbWB8MJd5g-4QlOveIxItB_huLp_uqmxcWMBhaO9_zr--Ca8QuqE0b6wCw27gKk-mgmf7KWIw1LE5ZX2eEfKPCiWaDVaINoMA3xhVmO5Ang2_1uvu3tTPWiFKfmplnLxhjMjIYfaoPJHoq53fGypbprHleZxoERpIssRlds2mH-7vvg8Pixh8IQf"/>
+</div>
+<div class="text-right">
+<span class="block font-label text-xs font-bold text-tertiary uppercase tracking-widest mb-1">FOR · BHA</span>
+<span class="block font-headline text-2xl font-black tracking-tight">Joao Pedro</span>
+</div>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">PRICE</span>
+<span class="font-label font-bold text-lg">£5.4m</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">XPTS</span>
+<span class="font-label font-bold text-lg text-primary">18.1</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">OWN%</span>
+<span class="font-label font-bold text-lg">5.8%</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-secondary/10 p-4 rounded-xl border border-secondary/20">
+<span class="text-[10px] font-bold uppercase tracking-[0.15em] text-on-secondary-container">Diff Score</span>
+<span class="font-label font-bold text-2xl text-secondary">88</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-2xl relative group border border-outline-variant/10 shadow-lg hover:shadow-xl transition-all">
+<div class="flex justify-between items-start mb-8">
+<div class="w-20 h-20 bg-surface-container-high rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
+<img alt="Player Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzdfX6kf-fSjjzPiXvldQ9f9q0qeZkX4IpCQfn0PQsxC1VDMyCoQHWKDAQwhpVAWHJZTFoHyqM3RsoVE9h9REIRMwQTkvuT7fDhOzZiNmVFr3KapoicNIIUNO9jWWvpacuDPX3zEkOPjCS5z5bprTkuMmOY6GZhJHwZYmysQUnQKoTCE_fZm3npwiUBPqEt4Chxj_4Eds0_3xCX47ltxcZMcEQSP-M3KMlZ97uD-zaq2m3rIQEYoAXtMU599nO2EmsXWcPjMWeKiEn"/>
+</div>
+<div class="text-right">
+<span class="block font-label text-xs font-bold text-on-secondary-container uppercase tracking-widest mb-1">DEF · NEW</span>
+<span class="block font-headline text-2xl font-black tracking-tight">S. Botman</span>
+</div>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">PRICE</span>
+<span class="font-label font-bold text-lg">£4.5m</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">XPTS</span>
+<span class="font-label font-bold text-lg text-primary">12.5</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">OWN%</span>
+<span class="font-label font-bold text-lg">6.1%</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-secondary/10 p-4 rounded-xl border border-secondary/20">
+<span class="text-[10px] font-bold uppercase tracking-[0.15em] text-on-secondary-container">Diff Score</span>
+<span class="font-label font-bold text-2xl text-secondary">82</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-2xl relative group border border-outline-variant/10 shadow-lg hover:shadow-xl transition-all">
+<div class="flex justify-between items-start mb-8">
+<div class="w-20 h-20 bg-surface-container-high rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
+<img alt="Player Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmgCKelvuif16R1s6qZBv9ivg2kqeQpEScEbQt7kCCVvX-rcSLuaIAmGsOy86E6LNTuqSSnTAlOMUiHm4A9mx4lfPE_yN6GY5uBFpyN997hK3Dgf7B4AfMr-7ENQJApW-wcZAmNjVk1xxBNwScYdD9IW2Ih4XeK5PTonaVllYLyw_2yL75t82uQ7jsqMUNvUMgl00JGx18OEak2PEAdM1HwtjPuVwx5taxqwrQ1Tt7G_gPC7DctdsGOTKK3oDu63V9Hb0tIk7yk_fa"/>
+</div>
+<div class="text-right">
+<span class="block font-label text-xs font-bold text-primary uppercase tracking-widest mb-1">MID · TOT</span>
+<span class="block font-headline text-2xl font-black tracking-tight">Kulusevski</span>
+</div>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">PRICE</span>
+<span class="font-label font-bold text-lg">£7.1m</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">XPTS</span>
+<span class="font-label font-bold text-lg text-primary">15.4</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">OWN%</span>
+<span class="font-label font-bold text-lg">4.7%</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-secondary/10 p-4 rounded-xl border border-secondary/20">
+<span class="text-[10px] font-bold uppercase tracking-[0.15em] text-on-secondary-container">Diff Score</span>
+<span class="font-label font-bold text-2xl text-secondary">91</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-2xl relative group border border-outline-variant/10 shadow-lg hover:shadow-xl transition-all">
+<div class="flex justify-between items-start mb-8">
+<div class="w-20 h-20 bg-surface-container-high rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
+<img alt="Player Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVo4gaXMfoN9raTQhkEjoqQ_Cf81zVVSHZbdGVuMv-_L27eG7e_TrG90V1fQNEFOl-xb61NVhOIJGS0OSu6c4xgeoCUuMt0ATg795E2OPg_m10IJGyqsh1Rw2CIJAgPgdgO5z6a6thqmnV0BcZBkTeMz9nt4WdR87vD95bpwwob1PpbcPqoZTkrhEtUw4vouopR5kLc437PVcyXeU36rsrcz0fV1JqILYG9-7nc2zZKVJ9-A4MBPgDv3WuYuYh6J1cVYejpLmri89N"/>
+</div>
+<div class="text-right">
+<span class="block font-label text-xs font-bold text-secondary uppercase tracking-widest mb-1">GK · WOL</span>
+<span class="block font-headline text-2xl font-black tracking-tight">Jose Sa</span>
+</div>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">PRICE</span>
+<span class="font-label font-bold text-lg">£5.0m</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">XPTS</span>
+<span class="font-label font-bold text-lg text-primary">10.2</span>
+</div>
+<div class="flex justify-between items-center py-3 border-b border-outline-variant/10">
+<span class="text-xs font-bold text-outline tracking-wider">OWN%</span>
+<span class="font-label font-bold text-lg">2.1%</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-secondary/10 p-4 rounded-xl border border-secondary/20">
+<span class="text-[10px] font-bold uppercase tracking-[0.15em] text-on-secondary-container">Diff Score</span>
+<span class="font-label font-bold text-2xl text-secondary">79</span>
+</div>
+</div>
+</div>
+<!-- Position Picks List -->
+<div class="mb-12">
+<h2 class="font-headline text-3xl font-black mb-8 uppercase italic tracking-tighter">Positional Watchlist</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+<!-- GK Section -->
+<div class="bg-surface-container-high/50 p-6 rounded-2xl border border-outline-variant/10">
+<h4 class="font-headline font-bold text-primary mb-6 flex items-center justify-between">
+                            GK <span class="material-symbols-outlined text-lg" data-icon="shield">shield</span>
+</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Dubravka</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£4.2m</span>
+</div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Neto</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£4.6m</span>
+</div>
+<div class="flex justify-between items-center opacity-40 grayscale">
+<span class="font-bold text-sm">Areola</span>
+<span class="font-label text-xs font-bold">£4.3m</span>
+</div>
+</div>
+</div>
+<!-- DEF Section -->
+<div class="bg-surface-container-high/50 p-6 rounded-2xl border-t-4 border-secondary shadow-sm">
+<h4 class="font-headline font-bold text-secondary mb-6 flex items-center justify-between">
+                            DEF <span class="material-symbols-outlined text-lg" data-icon="grid_view">grid_view</span>
+</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-secondary transition-colors">Estupinan</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£5.1m</span>
+</div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-secondary transition-colors">Doughty</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£4.5m</span>
+</div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-secondary transition-colors">Udogie</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£4.9m</span>
+</div>
+</div>
+</div>
+<!-- MID Section -->
+<div class="bg-surface-container-high/50 p-6 rounded-2xl border-t-4 border-primary shadow-sm">
+<h4 class="font-headline font-bold text-primary mb-6 flex items-center justify-between">
+                            MID <span class="material-symbols-outlined text-lg" data-icon="sports_soccer">sports_soccer</span>
+</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Garnacho</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£4.8m</span>
+</div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Diogo Jota</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£8.0m</span>
+</div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Neto</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£5.7m</span>
+</div>
+</div>
+</div>
+<!-- FWD Section -->
+<div class="bg-surface-container-high/50 p-6 rounded-2xl border-t-4 border-tertiary shadow-sm">
+<h4 class="font-headline font-bold text-tertiary mb-6 flex items-center justify-between">
+                            FWD <span class="material-symbols-outlined text-lg" data-icon="rocket_launch">rocket_launch</span>
+</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-tertiary transition-colors">Toney</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£8.0m</span>
+</div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-tertiary transition-colors">Solanke</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£7.1m</span>
+</div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="font-bold text-sm group-hover:text-tertiary transition-colors">Adebayo</span>
+<span class="font-label text-xs font-bold bg-white px-2 py-1 rounded">£4.9m</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Stats -->
+<footer class="mt-20 py-12 border-t border-outline-variant/20 flex flex-col md:flex-row justify-between items-center gap-8">
+<div>
+<span class="text-2xl font-black text-primary italic font-headline">FPL Kinetic</span>
+<p class="text-[10px] font-black text-outline uppercase tracking-[0.25em] mt-3">The Editorial Pulse of Fantasy Football</p>
+</div>
+<div class="flex gap-10 text-[10px] font-black uppercase tracking-[0.15em] text-on-surface-variant">
+<a class="hover:text-primary transition-colors" href="#">Methodology</a>
+<a class="hover:text-primary transition-colors" href="#">Data Partners</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy</a>
+</div>
+<div class="flex gap-4">
+<button class="w-12 h-12 bg-on-surface text-surface rounded-full flex items-center justify-center hover:bg-primary transition-all active:scale-90 shadow-lg">
+<span class="material-symbols-outlined text-2xl" data-icon="share">share</span>
+</button>
+<button class="px-8 py-3 bg-secondary text-white rounded-full font-black text-xs uppercase tracking-widest hover:shadow-xl hover:shadow-secondary/20 transition-all active:scale-95">Copy Link</button>
+</div>
+</footer>
+</main>
+</div>
+<!-- Mobile Bottom Nav -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-low border-t border-outline-variant/10 px-6 py-4 flex justify-between items-center z-50">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-[10px] font-bold">HOME</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-[10px] font-bold">GEMS</span>
+</button>
+<button class="bg-primary text-white w-14 h-14 rounded-full -mt-12 flex items-center justify-center shadow-xl border-4 border-background">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-[10px] font-bold">STATS</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="text-[10px] font-bold">ME</span>
+</button>
+</div>
+</body></html>

@@ -30,6 +30,7 @@ class PointsPrediction:
     expected_points: float
     expected_points_low: float  # Floor
     expected_points_high: float  # Ceiling
+    expected_points_next_5: float  # Multi-GW Horizon
     
     # Value metrics
     value_score: float  # Expected points per £1m
@@ -46,6 +47,8 @@ class PointsPrediction:
     fixture_info: str
     form_trend: str
     minutes_tag: str
+    gw_multiplier: int  # 0=BGW, 1=normal, 2=DGW
+    gw_label: str = None  # BGW, DGW, or None
 
 
 class PointsPredictionAgent:
@@ -188,10 +191,27 @@ class PointsPredictionAgent:
         # Total expected points
         expected_points = goal_points + assist_points + cs_points + appearance_points + bonus_points
         
+        # Calculate expected points horizon (next 5 GWs)
+        expected_points_next_5 = 0.0
+        fixture = self.fixtures.analyses.get(player.id)
+        if fixture and fixture.fixture_run:
+            current_fdr = fixture.fdr
+            current_factor = {1: 1.3, 2: 1.15, 3: 1.0, 4: 0.85, 5: 0.7}.get(current_fdr, 1.0)
+            if fixture.is_home: current_factor *= 1.1
+            
+            neutral_xpts = expected_points / current_factor if current_factor > 0 else expected_points
+            
+            for fix in fixture.fixture_run:
+                f_factor = {1: 1.3, 2: 1.15, 3: 1.0, 4: 0.85, 5: 0.7}.get(fix['fdr'], 1.0)
+                if fix['home']: f_factor *= 1.1
+                expected_points_next_5 += neutral_xpts * f_factor
+        else:
+            expected_points_next_5 = expected_points * 5
+            
         # Calculate range (floor/ceiling)
         variance = expected_points * 0.4
         floor = max(0, expected_points - variance)
-        ceiling = expected_points + variance * 1.5  # Upside is higher
+        ceiling = expected_points + variance * 1.5
         
         # Confidence
         confidence = 70
@@ -201,12 +221,46 @@ class PointsPredictionAgent:
         # Value score
         value_score = expected_points / player.price if player.price > 0 else 0
         
+        # ── BGW / DGW multiplier ──
+        # If a team has no fixture this GW, the player scores 0.
+        # If a team has 2 fixtures (DGW), multiply by ~1.8 (not 2 due to rotation/fatigue).
+        gw_fixture_count = fixture.next_gw_fixture_count if fixture else 1
+        
+        if gw_fixture_count == 0:
+            # BGW: Zero out everything
+            expected_points = 0
+            goal_points = 0
+            assist_points = 0
+            cs_points = 0
+            appearance_points = 0
+            bonus_points = 0
+            floor = 0
+            ceiling = 0
+        elif gw_fixture_count >= 2:
+            # DGW: Multiply (with fatigue discount)
+            dgw_factor = 1.8  # 2 games but expect some rotation
+            expected_points *= dgw_factor
+            goal_points *= dgw_factor
+            assist_points *= dgw_factor
+            cs_points *= dgw_factor
+            appearance_points *= dgw_factor
+            bonus_points *= dgw_factor
+            floor *= dgw_factor
+            ceiling *= dgw_factor
+        
         # Context strings
-        fixture_info = "No fixture"
-        fixture = self.fixtures.analyses.get(player.id)
+        fixture_info = "No fixture (BGW)"
         if fixture:
-            venue = "H" if fixture.is_home else "A"
-            fixture_info = f"{fixture.next_opponent}({venue}) FDR:{fixture.fdr}"
+            if gw_fixture_count == 0:
+                fixture_info = "BLANK GW — No match"
+            elif gw_fixture_count >= 2:
+                # Show both opponents for DGW
+                next_gw_fixes = [f for f in fixture.fixture_run if f['gw'] == self.data.next_gw]
+                opps = [f"{f['opponent']}({'H' if f['home'] else 'A'})" for f in next_gw_fixes]
+                fixture_info = f"DGW: {' & '.join(opps)}"
+            else:
+                venue = "H" if fixture.is_home else "A"
+                fixture_info = f"{fixture.next_opponent}({venue}) FDR:{fixture.fdr}"
         
         form_trend = "unknown"
         form = self.form.analyses.get(player.id)
@@ -231,6 +285,7 @@ class PointsPredictionAgent:
             expected_points=round(expected_points, 2),
             expected_points_low=round(floor, 2),
             expected_points_high=round(ceiling, 2),
+            expected_points_next_5=round(expected_points_next_5, 2),
             value_score=round(value_score, 3),
             confidence=round(confidence, 1),
             goal_probability=round(goal_prob * 100, 1),
@@ -238,7 +293,9 @@ class PointsPredictionAgent:
             clean_sheet_probability=round(cs_prob * 100, 1),
             fixture_info=fixture_info,
             form_trend=form_trend,
-            minutes_tag=minutes_tag
+            minutes_tag=minutes_tag,
+            gw_multiplier=gw_fixture_count,
+            gw_label="BGW" if gw_fixture_count == 0 else ("DGW" if gw_fixture_count >= 2 else None)
         )
         
         self.predictions[player.id] = prediction
@@ -298,6 +355,7 @@ class PointsPredictionAgent:
                 "xPts": p.expected_points,
                 "xPts_low": p.expected_points_low,
                 "xPts_high": p.expected_points_high,
+                "xPts_next_5": p.expected_points_next_5,
                 "xG": p.goal_probability,
                 "xA": p.assist_probability,
                 "xCS": p.clean_sheet_probability,
@@ -305,7 +363,8 @@ class PointsPredictionAgent:
                 "confidence": p.confidence,
                 "fixture": p.fixture_info,
                 "form": p.form_trend,
-                "minutes": p.minutes_tag
+                "minutes": p.minutes_tag,
+                "gw_label": p.gw_label
             }
             for p in sorted(self.predictions.values(), key=lambda x: x.expected_points, reverse=True)
         ]

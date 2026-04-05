@@ -52,16 +52,38 @@ class PlayerFormAgent:
     def __init__(self, data_agent: FPLDataIngestion):
         self.data = data_agent
         self.analyses: dict[int, FormAnalysis] = {}
+        self.player_histories: dict[int, list] = {}
     
     def analyze_player(self, player: Player) -> FormAnalysis:
         """Perform form analysis on a single player."""
         
-        # Calculate per-90 stats (avoid division by zero)
+        # Calculate season per-90 stats (avoid division by zero)
         minutes_90 = max(player.minutes / 90, 0.1)
         
         xg_per_90 = player.expected_goals / minutes_90 if minutes_90 > 0 else 0
         xa_per_90 = player.expected_assists / minutes_90 if minutes_90 > 0 else 0
         xgi_per_90 = player.expected_goal_involvements / minutes_90 if minutes_90 > 0 else 0
+        
+        # Integrate Short-Term Underlying Form (last 4 matches) if available
+        history = getattr(self, "player_histories", {}).get(player.id, [])
+        recent = history[-4:] if history else []
+        
+        if recent:
+            recent_mins = sum(r.get("minutes", 0) for r in recent)
+            if recent_mins > 0:
+                xg_recent = sum(float(r.get("expected_goals", 0)) for r in recent)
+                xa_recent = sum(float(r.get("expected_assists", 0)) for r in recent)
+                xgi_recent = sum(float(r.get("expected_goal_involvements", 0)) for r in recent)
+                
+                # Calculate recent per-90 metrics
+                xg_per_90_recent = (xg_recent / recent_mins) * 90
+                xa_per_90_recent = (xa_recent / recent_mins) * 90
+                xgi_per_90_recent = (xgi_recent / recent_mins) * 90
+                
+                # Blend recent form and season form (70% weight to short-term form)
+                xg_per_90 = (xg_per_90_recent * 0.7) + (xg_per_90 * 0.3)
+                xa_per_90 = (xa_per_90_recent * 0.7) + (xa_per_90 * 0.3)
+                xgi_per_90 = (xgi_per_90_recent * 0.7) + (xgi_per_90 * 0.3)
         
         # Over/Under performance
         goals_vs_xg = player.goals_scored - player.expected_goals
@@ -121,6 +143,30 @@ class PlayerFormAgent:
     
     def analyze_all_players(self) -> list[FormAnalysis]:
         """Analyze form for all available players."""
+        import concurrent.futures
+        
+        # Pre-fetch history for relevant players (e.g. > 1% ownership or > 30 points)
+        relevant_players = [
+            p for p in self.data.players 
+            if p.status == "a" and p.minutes > 0 and (p.selected_by_percent > 1.0 or p.total_points > 30)
+        ]
+        
+        print(f"📊 Fetching granular match history for {len(relevant_players)} relevant players...")
+        self.player_histories = {}
+        
+        def fetch_history(player: Player):
+            try:
+                hist = self.data.fetch_player_history(player.id)
+                return player.id, hist.get("history", [])
+            except Exception:
+                return player.id, []
+                
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_player = {executor.submit(fetch_history, p): p for p in relevant_players}
+            for future in concurrent.futures.as_completed(future_to_player):
+                pid, history = future.result()
+                self.player_histories[pid] = history
+                
         results = []
         for player in self.data.players:
             if player.status == "a" and player.minutes > 0:

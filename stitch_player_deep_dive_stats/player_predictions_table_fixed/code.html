@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FPL Kinetic | Player Predictions GW31</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&amp;family=Manrope:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "outline": "#82807b",
+                        "error-container": "#f74b6d",
+                        "tertiary-fixed": "#ff909c",
+                        "surface-dim": "#e5e2d9",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#005e3a",
+                        "surface-container-high": "#f0eee5",
+                        "on-primary-container": "#220076",
+                        "secondary-dim": "#00663f",
+                        "on-primary-fixed-variant": "#2b0090",
+                        "on-tertiary-fixed": "#39000c",
+                        "surface-container": "#f6f3eb",
+                        "secondary-fixed": "#78fbb6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#0e0e0b",
+                        "on-background": "#383833",
+                        "error-dim": "#a70138",
+                        "primary-dim": "#5621f3",
+                        "on-secondary-fixed-variant": "#006941",
+                        "on-surface-variant": "#65645f",
+                        "on-primary-fixed": "#000000",
+                        "surface": "#fdffda",
+                        "tertiary-container": "#ff909c",
+                        "on-secondary-fixed": "#00492c",
+                        "secondary": "#007348",
+                        "secondary-container": "#78fbb6",
+                        "tertiary": "#c31c45",
+                        "on-error-container": "#510017",
+                        "primary-fixed": "#a292ff",
+                        "on-tertiary-container": "#68001e",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ff7989",
+                        "surface-tint": "#6236ff",
+                        "surface-bright": "#fdffda",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#fdffda",
+                        "inverse-primary": "#927dff",
+                        "surface-variant": "#ebe8df",
+                        "primary-fixed-dim": "#9581ff",
+                        "tertiary-dim": "#b1063a",
+                        "on-surface": "#383833",
+                        "on-tertiary-fixed-variant": "#780024",
+                        "surface-container-highest": "#ebe8df",
+                        "secondary-fixed-dim": "#69eca8",
+                        "primary": "#6236ff",
+                        "outline-variant": "#bbb9b3",
+                        "surface-container-low": "#fcf9f1",
+                        "inverse-on-surface": "#9f9d97",
+                        "on-error": "#ffffff",
+                        "primary-container": "#a292ff",
+                        "error": "#c12048"
+                    },
+                    fontFamily: {
+                        "headline": ["Epilogue"],
+                        "body": ["Manrope"],
+                        "label": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+        }
+        .editorial-grain {
+            position: relative
+        }
+        .editorial-grain::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBOTpz9MUxDQ2JZGY_IxDxXdmGPB-HBOyzdkaOQ9Rb29NTof1bAYUHFTg_KosnReAplea9-3znaoqjtd09SSddxyQ98CmRjYfES4SSGb5BkEXB9VfzNTsbq0bYtyxqyarYne2-Xu-C6dog7TDkKx2g6TOqUPMR5Aj6jb0LhI3CafD4dD8cJ2vSyxovGWnmgLxZd8g3wBzLsttq3htg6hLViFAOd1ebAA84YrdoPk9ufxNRR6khNLQF9G9To-DLE8TWBTpJsL0Z7BWw3);
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 10
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface editorial-grain min-h-screen">
+<!-- Top Navigation Anchor (Shared Component: TopNavBar) -->
+<nav class="flex justify-between items-center w-full px-8 py-4 max-w-[1920px] mx-auto sticky top-0 z-50 bg-[#fdffda] dark:bg-stone-900 shadow-sm">
+<div class="text-2xl font-black text-[#6236ff] dark:text-[#a292ff] tracking-tighter italic font-headline">FPL Kinetic</div>
+<div class="hidden md:flex items-center gap-8 font-['Epilogue'] font-bold tracking-tight">
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200 px-2 py-1 rounded" href="#">Analysis</a>
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200 px-2 py-1 rounded" href="#">My Team</a>
+<a class="text-[#6236ff] dark:text-[#a292ff] border-b-4 border-[#6236ff] pb-1" href="#">Predictions</a>
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200 px-2 py-1 rounded" href="#">Optimal XI</a>
+<a class="text-[#383833] dark:text-stone-400 font-medium hover:text-[#6236ff] hover:bg-[#f0eee5] dark:hover:bg-stone-800 transition-colors duration-200 px-2 py-1 rounded" href="#">Differentials</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-all text-on-surface">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-all text-on-surface">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-primary-container overflow-hidden border border-outline-variant/30">
+<img alt="Manager Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBocNc3t55nx0GfsSOIu-jE_jHaDtOEwgiEkeWJnfWVYy-QM54_lPr4GBBSdYyjt-PI7UQAH5G6wXWscjYWkLCVKXnB39XZQ2tc5SXc3dXlBmKP81Pl96XO_OL9eoNZ6gS6InCHPkvd6ILO0GBhM-prj8xFmNXp3M-dOtVjEws9RM-eGliacVDqjeCVM3DdKm3VOL-rYexk27a9olsRxAjLuBVb0BEQ9A-12-BAK-LLjifYi36pq6NqA_N6QLA8HcvtFdbRcW-PgCe2"/>
+</div>
+</div>
+</nav>
+<main class="max-w-[1920px] mx-auto flex">
+<!-- Sidebar Shell (Shared Component: SideNavBar) -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-80px)] w-64 p-6 gap-8 sticky top-20 bg-[#fcf9f1] dark:bg-stone-900 shadow-[20px_0_40px_rgba(56,56,51,0.03)] font-['Manrope'] font-semibold">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black italic">K</div>
+<div>
+<div class="text-sm font-black text-[#6236ff]">Kinetic Editorial</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant">Gameweek 31 Live</div>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">query_stats</span> Ownership
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">group</span> Squad
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#6236ff] text-white rounded-xl shadow-lg shadow-[#6236ff]/20" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">insights</span> Forecasts
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">star</span> Dream XI
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#383833] dark:text-stone-400 hover:bg-[#f0eee5] dark:hover:bg-stone-800 rounded-xl hover:translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined">auto_awesome</span> Gems
+                </a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant/10 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+                </a>
+<div class="bg-primary/5 p-4 rounded-xl mt-4">
+<p class="text-xs font-bold text-primary mb-2">PRO FEATURES</p>
+<button class="w-full py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md shadow-primary/20 active:scale-95 transition-all">Upgrade to Pro</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="flex-1 p-8 lg:p-12 overflow-hidden">
+<!-- Hero Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
+<div class="space-y-2">
+<h1 class="text-6xl font-black font-headline tracking-tighter text-on-surface leading-none">PLAYER <span class="text-primary italic">PREDICTIONS</span></h1>
+<p class="text-on-surface-variant max-w-lg font-['Manrope'] font-medium">Algorithmic point projections for Gameweek 31 based on xG, fixture difficulty, and team rotation probability.</p>
+</div>
+<button class="px-8 py-4 bg-primary text-white font-headline font-bold text-lg rounded-full shadow-2xl shadow-primary/30 hover:scale-105 transition-transform flex items-center gap-3">
+<span class="material-symbols-outlined">auto_fix_high</span> Generate My XI
+                </button>
+</div>
+<!-- Dashboard Filters Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="bg-surface-container-low p-4 rounded-xl flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-['Manrope']">Position Filter</span>
+<div class="flex justify-between items-center">
+<span class="font-headline font-bold text-xl">All Positions</span>
+<span class="material-symbols-outlined text-primary">filter_list</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-['Manrope']">Price Bracket</span>
+<div class="flex justify-between items-center">
+<span class="font-headline font-bold text-xl">All Prices</span>
+<span class="material-symbols-outlined text-primary">payments</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl flex flex-col gap-1 border-l-4 border-emerald-600">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-['Manrope']">Top Value Target</span>
+<div class="flex justify-between items-center">
+<span class="font-headline font-bold text-xl text-emerald-600">Palmer</span>
+<span class="font-label text-sm text-emerald-600">8.2 xPts</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl flex flex-col gap-1 border-l-4 border-primary">
+<span class="text-[10px] font-bold text-primary uppercase tracking-widest font-['Manrope']">GW31 Status</span>
+<div class="flex justify-between items-center">
+<span class="font-headline font-bold text-xl text-primary">10 Transfers</span>
+<span class="material-symbols-outlined text-primary">bolt</span>
+</div>
+</div>
+</div>
+<!-- Main Predictions Table -->
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(56,56,51,0.05)] border border-outline-variant/10">
+<table class="w-full text-left border-collapse table-auto">
+<thead>
+<tr class="bg-surface-container-high/50 text-on-surface-variant font-headline font-bold text-[10px] uppercase tracking-widest">
+<th class="px-6 py-5">Rank</th>
+<th class="px-6 py-5">Player</th>
+<th class="px-6 py-5">Price</th>
+<th class="px-6 py-5">Expected Pts</th>
+<th class="px-6 py-5">Point Range</th>
+<th class="px-6 py-5">Value Score</th>
+<th class="px-6 py-5 text-right">Form Trend</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<!-- Row 1: Salah -->
+<tr class="hover:bg-surface-container-low transition-colors duration-200 group">
+<td class="px-6 py-8 font-label text-2xl font-bold text-on-surface/20 group-hover:text-primary/40 transition-colors">01</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-4">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-xl bg-surface-container-high overflow-hidden border-2 border-white shadow-sm">
+<img alt="Salah" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5MqZRZ_eB-Set4PtrNSSBhWVblW1OZkHsXalN9epFg2T1pA0MUoORoE8G65QNCajroJaXr04DoIY_dsBMP45kWvL1QJUieCuw2I9CuN_sm4z06KWHSnCwS3Fv0-VHn6g12GAKZYCmT0g2gr_4lJV31-A4BWzVFwIvQdP0p1nKmt_m2GUPvOISpWbWi5XMmSRb2csJvbDWdve0W4NyqLZK6n9GprKjog03LCetK1H0oYcC1-cr95TeekUsoWbUOhDwPuiwCt9g0tvq"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-white" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div>
+<div class="font-headline font-extrabold text-lg leading-tight">Salah</div>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 bg-on-surface text-white font-label text-[10px] font-bold rounded uppercase">LIV</span>
+<span class="px-2 py-0.5 bg-primary/10 text-primary font-label text-[10px] font-bold rounded uppercase">MID</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-8 font-label text-lg font-bold text-on-surface">£13.2m</td>
+<td class="px-6 py-8">
+<span class="text-3xl font-black font-headline text-primary">8.9</span>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-2">
+<span class="font-label text-sm text-on-surface-variant">5.4</span>
+<div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 75%"></div>
+</div>
+<span class="font-label text-sm text-on-surface-variant">12.1</span>
+</div>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-1 text-emerald-600">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-headline font-bold">0.67</span>
+</div>
+</td>
+<td class="px-6 py-8 text-right">
+<span class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full font-label font-bold text-[10px] flex items-center gap-1 justify-end w-fit ml-auto border border-emerald-100 uppercase tracking-tighter">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> RISING
+                                </span>
+</td>
+</tr>
+<!-- Row 2: Haaland -->
+<tr class="hover:bg-surface-container-low transition-colors duration-200 group">
+<td class="px-6 py-8 font-label text-2xl font-bold text-on-surface/20 group-hover:text-primary/40 transition-colors">02</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-4">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-xl bg-surface-container-high overflow-hidden border-2 border-white shadow-sm">
+<img alt="Haaland" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnsjIQzinIJy5yCMbuDmikfyit6cFZlEuhK8LpUYX6gMZwHS5xB_MdOqQYD8MN6pm_jDHMjbwW7h5IF6dQMV5Vau_yJrkA_WF1gLdKSSer4ciHP4N6-oC7yAfvsncjE4hxXtp-yOPc8Rn1rQ8FIy_kKC7MM3MiFmYDNm1Ri1djNBH_BAt3GjS5hT6xQ3oCQQ7Fe9CQY1GmPqgKyqrkwpbB1263em7Bmcl4GmSgCk0gM0H2eFQI7CTp9hgbL2MGn1fhzCc1iEAtQYNp"/>
+</div>
+</div>
+<div>
+<div class="font-headline font-extrabold text-lg leading-tight">Haaland</div>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 bg-on-surface text-white font-label text-[10px] font-bold rounded uppercase">MCI</span>
+<span class="px-2 py-0.5 bg-primary/10 text-primary font-label text-[10px] font-bold rounded uppercase">FWD</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-8 font-label text-lg font-bold text-on-surface">£14.4m</td>
+<td class="px-6 py-8">
+<span class="text-3xl font-black font-headline text-on-surface">8.4</span>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-2">
+<span class="font-label text-sm text-on-surface-variant">4.2</span>
+<div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-on-surface-variant rounded-full" style="width: 60%"></div>
+</div>
+<span class="font-label text-sm text-on-surface-variant">11.8</span>
+</div>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-headline font-bold">0.58</span>
+</div>
+</td>
+<td class="px-6 py-8 text-right">
+<span class="px-3 py-1 bg-surface-container text-on-surface-variant rounded-full font-label font-bold text-[10px] flex items-center gap-1 justify-end w-fit ml-auto border border-outline-variant/20 uppercase tracking-tighter">
+<span class="material-symbols-outlined text-[14px]">trending_flat</span> STABLE
+                                </span>
+</td>
+</tr>
+<!-- Row 3: Palmer -->
+<tr class="hover:bg-surface-container-low transition-colors duration-200 group">
+<td class="px-6 py-8 font-label text-2xl font-bold text-on-surface/20 group-hover:text-primary/40 transition-colors">03</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-4">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-xl bg-surface-container-high overflow-hidden border-2 border-white shadow-sm">
+<img alt="Palmer" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq_qz4qbl0KCwNVV4H8fB12eVilEaojSj9Qat6l_1i795ffljAgqbDzdcGSbLWRV6sR0gvkCmx9UEOxDIVFWZfmgFRQ4mI8Z0nZhBogjPr9aLnjYVA4uZGP5Jdu2PRqqo4UFMTI_B8i2Q6pP0tff4pjwf7I-3wCuMFXDHeSCJqGip9iBeM2QtLXlDKbWuJ3B-VBgtZlA2ZAFevY357zuVRjRAzECiKhldxTUkLQ0xU_HyuIxhzxUB7aw_zjawRfgIJ-lDqh3tMlGAC"/>
+</div>
+<div class="absolute -top-1 -left-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+<span class="material-symbols-outlined text-[12px] text-white">star</span>
+</div>
+</div>
+<div>
+<div class="font-headline font-extrabold text-lg leading-tight">Palmer</div>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 bg-on-surface text-white font-label text-[10px] font-bold rounded uppercase">CHE</span>
+<span class="px-2 py-0.5 bg-primary/10 text-primary font-label text-[10px] font-bold rounded uppercase">MID</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-8 font-label text-lg font-bold text-on-surface">£6.1m</td>
+<td class="px-6 py-8">
+<span class="text-3xl font-black font-headline text-primary">8.2</span>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-2">
+<span class="font-label text-sm text-on-surface-variant">3.9</span>
+<div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-emerald-600 rounded-full" style="width: 85%"></div>
+</div>
+<span class="font-label text-sm text-on-surface-variant">10.5</span>
+</div>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-1 text-emerald-600">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-headline font-bold text-xl">1.34</span>
+</div>
+</td>
+<td class="px-6 py-8 text-right">
+<span class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full font-label font-bold text-[10px] flex items-center gap-1 justify-end w-fit ml-auto border border-emerald-100 uppercase tracking-tighter">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> RISING
+                                </span>
+</td>
+</tr>
+<!-- Row 4: Son -->
+<tr class="hover:bg-surface-container-low transition-colors duration-200 group">
+<td class="px-6 py-8 font-label text-2xl font-bold text-on-surface/20 group-hover:text-primary/40 transition-colors">04</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-4">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-xl bg-surface-container-high overflow-hidden border-2 border-white shadow-sm">
+<img alt="Son" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAB4hEu2AywdlUIaXgJF9zJUFv7w81FyC9eYjeq1SzO8hyg3CbRzBP_WEXD4NVzriiVmjT4mWYZC70SpcABwef9WLeYeDXkFZbNSKYhWlsqWkvJmhVWBYdmTPaVUp80BmI6XHnb7dCQsVu0kdJ2Uvv0QL1IB7ds9H5maMFsxAeen_ks_Yuy_Uf_CNFFEc8HEVOcK7xbVPJFiCOYwXqZF8MOKs7zKyBWUYqJx2caqXclPbJSWFU2uQ_xmc1DytAIDevUxy2NzXO8cw6Z"/>
+</div>
+</div>
+<div>
+<div class="font-headline font-extrabold text-lg leading-tight">Son</div>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 bg-on-surface text-white font-label text-[10px] font-bold rounded uppercase">TOT</span>
+<span class="px-2 py-0.5 bg-primary/10 text-primary font-label text-[10px] font-bold rounded uppercase">MID</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-8 font-label text-lg font-bold text-on-surface">£10.1m</td>
+<td class="px-6 py-8">
+<span class="text-3xl font-black font-headline text-on-surface">7.9</span>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-2">
+<span class="font-label text-sm text-on-surface-variant">3.5</span>
+<div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-on-surface-variant rounded-full" style="width: 55%"></div>
+</div>
+<span class="font-label text-sm text-on-surface-variant">10.2</span>
+</div>
+</td>
+<td class="px-6 py-8">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-headline font-bold">0.78</span>
+</div>
+</td>
+<td class="px-6 py-8 text-right">
+<span class="px-3 py-1 bg-rose-50 text-rose-600 rounded-full font-label font-bold text-[10px] flex items-center gap-1 justify-end w-fit ml-auto border border-rose-100 uppercase tracking-tighter">
+<span class="material-symbols-outlined text-[14px]">trending_down</span> FALLING
+                                </span>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="p-6 bg-surface-container-high/30 flex justify-center border-t border-outline-variant/10">
+<button class="text-primary font-headline font-bold flex items-center gap-2 hover:underline transition-all">
+                        View Full Predictions <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Contextual Insight Bento Section -->
+<div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-surface-container-lowest p-8 rounded-2xl md:col-span-2 relative overflow-hidden group border border-outline-variant/10">
+<div class="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-9xl">insights</span>
+</div>
+<h3 class="font-headline font-black text-3xl mb-4 tracking-tighter">PREDICTIVE ANALYTICS ENGINE</h3>
+<p class="text-on-surface-variant max-w-md mb-6 leading-relaxed font-['Manrope']">Our GW31 algorithm factors in midweek European fatigue and rotation risks for title-contending squads. <span class="text-primary font-bold">Salah</span> leads the projections due to historical outperformance against Sheffield United.</p>
+<div class="flex gap-4">
+<button class="px-6 py-3 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary/20 transition-colors font-['Manrope']">Deep Dive Stats</button>
+<button class="px-6 py-3 border border-outline-variant text-on-surface font-bold rounded-full hover:bg-surface-container-high transition-colors font-['Manrope']">Methodology</button>
+</div>
+</div>
+<div class="bg-primary p-8 rounded-2xl flex flex-col justify-between text-white relative overflow-hidden shadow-xl shadow-primary/20">
+<div class="editorial-grain absolute inset-0 opacity-10"></div>
+<div>
+<span class="text-[10px] font-black tracking-widest uppercase opacity-70 font-['Manrope']">Editorial Spotlight</span>
+<h4 class="font-headline font-black text-4xl leading-tight mt-2">THE CHEAP <span class="italic underline decoration-4 underline-offset-4">GEM</span></h4>
+</div>
+<div>
+<p class="font-bold text-xl mb-4 font-['Manrope']">Cole Palmer continues to defy price-to-point models.</p>
+<button class="w-full py-3 bg-white text-primary font-headline font-black rounded-xl hover:bg-surface-container-low transition-all active:scale-95">READ FULL REPORT</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Mobile Navigation Shell -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#fcf9f1] dark:bg-stone-900 z-50 px-6 py-4 flex justify-between items-center shadow-[0_-10px_40px_rgba(56,56,51,0.05)] border-t border-outline-variant/10">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-bold font-['Manrope']">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">insights</span>
+<span class="text-[10px] font-bold font-['Manrope']">Predict</span>
+</button>
+<div class="-mt-12 bg-primary p-4 rounded-full shadow-xl shadow-primary/30 text-white">
+<span class="material-symbols-outlined">auto_fix_high</span>
+</div>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px] font-bold font-['Manrope']">Squad</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+<span class="text-[10px] font-bold font-['Manrope']">Profile</span>
+</button>
+</nav>
+</body></html>
