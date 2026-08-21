@@ -80,7 +80,7 @@ function App() {
           <div className="flex items-center gap-4">
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high text-secondary text-xs font-semibold uppercase tracking-widest font-label">
               <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-              {loading ? 'Connecting' : status?.status === 'ready' ? `GW${status?.next_gw} Ready` : 'Offline'}
+              {loading ? 'Connecting' : status?.status === 'ready' ? `GW${status?.next_gw} Ready${status?.ml_ready ? ' · ML' : ''}` : 'Offline'}
             </div>
 
             <button onClick={toggleTheme} className="p-2 hover:bg-surface-container-high rounded-full transition-colors flex items-center justify-center">
@@ -155,14 +155,49 @@ function App() {
 }
 
 function SimpleDashboard({ status, setActiveTab }: any) {
+  const [dash, setDash] = useState<any>(null)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/dashboard')
+        setDash(await res.json())
+      } catch (e) {
+        console.error('Dashboard fetch failed', e)
+      }
+    }
+    load()
+  }, [])
+
   return (
-    <div className="py-20 flex flex-col items-center justify-center text-center">
+    <div className="py-12 flex flex-col items-center text-center">
       <h1 className="font-headline text-5xl md:text-7xl font-black text-on-surface leading-[0.9] tracking-tighter mb-6">
         FPLly <span className="text-primary italic">DASHBOARD</span>
       </h1>
-      <p className="mt-2 text-lg text-outline font-body leading-relaxed max-w-xl mx-auto mb-8">
-        Welcome to your new Kinetic Editorial command center. AI models are online for GW{status?.next_gw}.
+      <p className="mt-2 text-lg text-outline font-body leading-relaxed max-w-xl mx-auto mb-10">
+        Models are online for GW{status?.next_gw}. Forecasts blend rules with a lagged ensemble (including FDR).
       </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mb-10 text-left">
+        <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-5">
+          <p className="font-label text-[10px] uppercase tracking-widest text-outline mb-2">Hot form</p>
+          <p className="font-headline text-2xl font-bold">{dash?.top_form?.name || '—'}</p>
+          <p className="text-sm text-outline">{dash?.top_form?.team} · form {dash?.top_form?.form ?? '—'}</p>
+        </div>
+        <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-5">
+          <p className="font-label text-[10px] uppercase tracking-widest text-outline mb-2">Next-GW MAE</p>
+          <p className="font-headline text-2xl font-bold">{dash?.mae ?? (status?.ml_mae ?? 'Train ML tab')}</p>
+          <p className="text-sm text-outline">
+            {dash?.forecast_skill != null ? `${dash.forecast_skill}% better than guessing the mean` : 'Open Analytics once to train'}
+          </p>
+        </div>
+        <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-5">
+          <p className="font-label text-[10px] uppercase tracking-widest text-outline mb-2">Top xPts</p>
+          <p className="font-headline text-2xl font-bold">{dash?.top_predictions?.[0]?.name || '—'}</p>
+          <p className="text-sm text-outline">{dash?.top_predictions?.[0]?.xpts != null ? `${dash.top_predictions[0].xpts} xPts` : '—'}</p>
+        </div>
+      </div>
+
       <button 
         onClick={() => setActiveTab('predictions')}
         className="bg-primary text-on-primary font-headline py-4 px-8 rounded-full flex items-center justify-center gap-2 hover:opacity-90 transition-all text-lg cursor-pointer"

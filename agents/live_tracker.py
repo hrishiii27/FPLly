@@ -1,5 +1,4 @@
 import requests
-from dataclasses import dataclass
 from .data_ingestion import BASE_URL, FPLDataIngestion
 
 class LiveTrackerAgent:

@@ -90,9 +90,11 @@ class PlayerFormAgent:
         assists_vs_xa = player.assists - player.expected_assists
         
         # Determine form trend based on comparing form to points_per_game
-        if player.form > player.points_per_game * 1.2:
+        if self.data.current_gw <= 2 or player.form <= 0.1:
+            form_trend = "stable"
+        elif player.form > player.points_per_game * 1.2 and player.points_per_game > 0:
             form_trend = "rising"
-        elif player.form < player.points_per_game * 0.8:
+        elif player.form < player.points_per_game * 0.8 and player.points_per_game > 1:
             form_trend = "falling"
         else:
             form_trend = "stable"
@@ -150,6 +152,8 @@ class PlayerFormAgent:
             p for p in self.data.players 
             if p.status == "a" and p.minutes > 0 and (p.selected_by_percent > 1.0 or p.total_points > 30)
         ]
+        relevant_players.sort(key=lambda p: p.selected_by_percent, reverse=True)
+        relevant_players = relevant_players[:60]
         
         print(f"📊 Fetching granular match history for {len(relevant_players)} relevant players...")
         self.player_histories = {}

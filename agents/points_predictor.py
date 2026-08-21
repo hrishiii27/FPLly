@@ -75,26 +75,30 @@ class PointsPredictionAgent:
         self.predictions: dict[int, PointsPrediction] = {}
     
     def _calculate_clean_sheet_prob(self, player: Player) -> float:
-        """Estimate clean sheet probability based on team data."""
-        # Get fixture difficulty
+        """Estimate CS probability from team defence + FDR (smoothed early season)."""
         fixture = self.fixtures.analyses.get(player.id)
         if not fixture:
-            return 0.2
+            return 0.22
         
-        # Base CS probability on games played
-        games = max(self.data.current_gw - 1, 1)
-        team_cs = player.clean_sheets
-        base_cs_rate = team_cs / games if games > 0 else 0.3
+        team = self.data.teams.get(player.team_id)
+        if fixture.is_home:
+            defence = team.strength_defence_home if team else 1100
+        else:
+            defence = team.strength_defence_away if team else 1100
+        # FPL strength is ~1000–1350; map to a 0.12–0.38 prior
+        prior = 0.22 + max(-0.10, min(0.14, (defence - 1100) / 2200))
         
-        # Adjust for fixture difficulty
-        fdr = fixture.fdr
-        fdr_multiplier = {1: 1.4, 2: 1.2, 3: 1.0, 4: 0.7, 5: 0.5}.get(fdr, 1.0)
+        sample = max(player.minutes / 90.0, 0)
+        if sample < 4:
+            base = prior
+        else:
+            observed = player.clean_sheets / sample
+            base = 0.55 * observed + 0.45 * prior
         
-        # Adjust for home/away
-        home_multiplier = 1.1 if fixture.is_home else 0.9
-        
-        cs_prob = base_cs_rate * fdr_multiplier * home_multiplier
-        return min(0.6, max(0.05, cs_prob))
+        fdr_multiplier = {1: 1.35, 2: 1.18, 3: 1.0, 4: 0.72, 5: 0.5}.get(fixture.fdr, 1.0)
+        home_multiplier = 1.08 if fixture.is_home else 0.92
+        cs_prob = base * fdr_multiplier * home_multiplier
+        return min(0.48, max(0.06, cs_prob))
     
     def _calculate_goal_contribution(self, player: Player) -> tuple[float, float]:
         """Calculate expected goals and assists for next GW."""
@@ -311,6 +315,21 @@ class PointsPredictionAgent:
         
         return sorted(results, key=lambda x: x.expected_points, reverse=True)
     
+    def blend_with_ml(self, ml_predictions: list, ml_weight: float = 0.4) -> None:
+        """Blend lagged ML forecasts into rule-based xPts (skip blank GWs)."""
+        by_id = {p.player_id: p for p in ml_predictions}
+        for pid, rule in self.predictions.items():
+            ml = by_id.get(pid)
+            if not ml or rule.gw_multiplier == 0:
+                continue
+            blended = (1 - ml_weight) * rule.expected_points + ml_weight * ml.ml_predicted_points
+            scale = blended / rule.expected_points if rule.expected_points else 1.0
+            rule.expected_points = round(blended, 2)
+            rule.expected_points_low = round(rule.expected_points_low * scale, 2)
+            rule.expected_points_high = round(rule.expected_points_high * scale, 2)
+            if rule.price > 0:
+                rule.value_score = round(rule.expected_points / rule.price, 3)
+
     def get_top_predictions(self, n: int = 20, position: str = None) -> list[PointsPrediction]:
         """Get top N predictions, optionally filtered by position."""
         preds = list(self.predictions.values())
@@ -324,13 +343,20 @@ class PointsPredictionAgent:
         """Get top captain picks (highest ceiling upside)."""
         preds = [
             p for p in self.predictions.values()
-            if p.minutes_tag in ["Nailed", "unknown"] and p.confidence >= 60
+            if p.minutes_tag in ["Nailed", "unknown", "Rotation Risk"]
+            and p.confidence >= 45
+            and p.gw_multiplier > 0
+            and p.position in ("MID", "FWD")
         ]
+        if len(preds) < n:
+            preds = [
+                p for p in self.predictions.values()
+                if p.gw_multiplier > 0 and p.minutes_tag not in ("Injured", "Suspended")
+            ]
         
-        # Sort by expected points with ceiling bonus
         return sorted(
             preds,
-            key=lambda x: x.expected_points * 1.5 + x.expected_points_high * 0.5,
+            key=lambda x: x.expected_points * 1.4 + x.expected_points_high * 0.6,
             reverse=True
         )[:n]
     
@@ -345,6 +371,7 @@ class PointsPredictionAgent:
     
     def to_dict(self) -> list[dict]:
         """Export predictions as list of dicts for JSON."""
+        own_map = {pl.id: pl.selected_by_percent for pl in self.data.players}
         return [
             {
                 "id": p.player_id,
@@ -352,6 +379,7 @@ class PointsPredictionAgent:
                 "team": p.team,
                 "position": p.position,
                 "price": p.price,
+                "ownership": own_map.get(p.player_id, 0),
                 "xPts": p.expected_points,
                 "xPts_low": p.expected_points_low,
                 "xPts_high": p.expected_points_high,

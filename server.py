@@ -3,11 +3,12 @@ FPL-Agent: Flask API Server
 Serves predictions and recommendations via REST API.
 """
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_caching import Cache
 import sys
 import os
+import re
 
 # Add agents to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -29,12 +30,10 @@ from agents.scout_chat import ScoutChatAgent
 from agents.league_analyzer import LeagueAnalyzer
 from agents.live_tracker import LiveTrackerAgent
 
-# Get the web folder path
-WEB_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'web')
+from models import db
 
-from models import db, User, SavedSquad, PlayerPriceHistory
-
-app = Flask(__name__, static_folder=WEB_FOLDER, static_url_path='')
+app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 CORS(app)
 cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 3600})
 cache.init_app(app)
@@ -115,9 +114,12 @@ def initialize_agents():
     ownership_analyzer.analyze_all_players()
     agents['ownership'] = ownership_analyzer
 
-    # ML Predictor
+    # ML Predictor (use cached ensemble immediately; full train is lazy)
     ml_predictor = MLPredictor(data_agent)
-    # ml_predictor.train() # Lazy train
+    if ml_predictor.load_cached_model():
+        ml_preds = ml_predictor.predict_all_players(prediction_agent.predictions)
+        prediction_agent.blend_with_ml(ml_preds)
+        prediction_agent._ml_blended = True
     agents['ml'] = ml_predictor
 
     # League Analyzer (Phase 14)
@@ -203,13 +205,15 @@ def api_dashboard():
     else:
         top_diff = None
     
-    # Get AI confidence (from ML if available)
     ml_agent = agents.get('ml')
-    ai_confidence = 92.4  # Default
+    forecast_skill = None
+    mae = None
     if ml_agent and ml_agent.is_trained:
-        ai_confidence = ml_agent.training_stats.get('r2_score', 0.92) * 100
+        stats = ml_agent.training_stats or {}
+        skill = stats.get('skill_vs_mean')
+        forecast_skill = round(max(0, skill) * 100, 1) if skill is not None else None
+        mae = stats.get('mae')
     
-    # Get top predictions for scout preview
     top_preds = prediction_agent.get_top_predictions(3)
     
     return jsonify({
@@ -223,7 +227,10 @@ def api_dashboard():
             "ownership": top_diff.ownership if top_diff else 0,
             "xpts": top_diff.xpts if top_diff else 0
         } if top_diff else None,
-        "ai_confidence": round(ai_confidence, 1),
+        "ml_ready": bool(ml_agent and ml_agent.is_trained),
+        "forecast_skill": forecast_skill,
+        "mae": mae,
+        "ai_confidence": forecast_skill if forecast_skill is not None else None,
         "top_predictions": [
             {"name": p.player_name, "xpts": round(p.expected_points, 1)}
             for p in top_preds
@@ -233,35 +240,22 @@ def api_dashboard():
 
 
 
-@app.route('/')
-def index():
-    """Serve the main page."""
-    return send_from_directory(WEB_FOLDER, 'index.html')
-
-
-@app.route('/styles.css')
-def styles():
-    """Serve CSS."""
-    return send_from_directory(WEB_FOLDER, 'styles.css')
-
-
-@app.route('/app.js')
-def javascript():
-    """Serve JavaScript."""
-    return send_from_directory(WEB_FOLDER, 'app.js')
-
-
 @app.route('/api/status')
 @cache.cached(query_string=True)
 def api_status():
     """Get system status."""
     data = agents.get('data')
+    prediction_agent = agents.get('predictions')
+    ml_agent = agents.get('ml')
     return jsonify({
         "status": "ready",
         "current_gw": data.current_gw if data else 0,
         "next_gw": data.next_gw if data else 0,
         "players_loaded": len(data.players) if data else 0,
-        "predictions_ready": len(agents.get('predictions', {}).predictions) if 'predictions' in agents else 0
+        "predictions_ready": len(prediction_agent.predictions) if prediction_agent else 0,
+        "ml_ready": bool(ml_agent and ml_agent.is_trained),
+        "ml_mae": (ml_agent.training_stats or {}).get("mae") if ml_agent and ml_agent.is_trained else None,
+        "seasons": (ml_agent.training_stats or {}).get("seasons") if ml_agent and ml_agent.is_trained else None,
     })
 
 
@@ -275,7 +269,7 @@ def api_predictions():
     
     # Optional filters
     position = request.args.get('position')
-    limit = request.args.get('limit', 50, type=int)
+    limit = request.args.get('limit', 100, type=int)
     min_price = request.args.get('min_price', 0, type=float)
     max_price = request.args.get('max_price', 20, type=float)
     
@@ -306,11 +300,12 @@ def api_captain():
         return jsonify({"error": "Not ready"}), 500
     
     captain_picks = prediction_agent.get_captain_picks(10)
+    players_by_id = {p.id: p for p in agents['data'].players}
     
-    # Get explanations
     recommendations = []
     for i, pick in enumerate(captain_picks):
         explanation = explainer.explain_captain_choice(pick, captain_picks[i+1:])
+        src = players_by_id.get(pick.player_id)
         recommendations.append({
             "rank": i + 1,
             "id": pick.player_id,
@@ -318,8 +313,15 @@ def api_captain():
             "team": pick.team,
             "position": pick.position,
             "price": pick.price,
+            "ownership": src.selected_by_percent if src else 0,
             "xPts": pick.expected_points,
             "xPts_high": pick.expected_points_high,
+            "xG": pick.goal_probability,
+            "xA": pick.assist_probability,
+            "xCS": pick.clean_sheet_probability,
+            "confidence": pick.confidence,
+            "form": pick.form_trend,
+            "minutes": pick.minutes_tag,
             "fixture": pick.fixture_info,
             "explanation": explainer.to_dict(explanation)
         })
@@ -515,13 +517,258 @@ def api_player(player_id: int):
 
 @app.route('/api/upload-team', methods=['POST'])
 def api_upload_team():
-    """Analyze uploaded team screenshot."""
-    if 'image' not in request.files:
-        return jsonify({"error": "No image provided"}), 400
-    
-    image_file = request.files['image']
-    if image_file.filename == '':
-        return jsonify({"error": "No image selected"}), 400
+    """Analyze an uploaded squad screenshot and/or a pasted name list."""
+    try:
+        if 'vision' not in agents:
+            agents['vision'] = TeamVisionAgent(agents['data'])
+        vision_agent = agents['vision']
+        prediction_agent = agents.get('predictions')
+        optimizer = agents.get('optimizer')
+        if not prediction_agent or not optimizer:
+            return jsonify({"error": "Predictions not ready yet"}), 503
+
+        names_raw = (request.form.get('names') or '').strip()
+        image_file = request.files.get('image')
+        detected = []
+
+        if image_file and image_file.filename:
+            image_data = image_file.read()
+            if image_data:
+                detected = vision_agent.detect_team(image_data)
+
+        if names_raw:
+            parts = [p.strip() for p in re.split(r'[\n,;|/]+', names_raw) if p.strip()]
+            from_names = vision_agent.match_name_list(parts)
+            seen = {d.player_id for d in detected if d.matched}
+            for d in from_names:
+                if d.matched and d.player_id not in seen:
+                    detected.append(d)
+                    seen.add(d.player_id)
+                elif not d.matched:
+                    detected.append(d)
+
+        if not detected:
+            if not image_file and not names_raw:
+                return jsonify({
+                    "error": "Upload a squad screenshot or paste player names (comma or newline separated)."
+                }), 400
+            return jsonify({
+                "error": "Could not read any players. Paste names as a fallback, or try a sharper crop of the pitch.",
+                "detected_players": [],
+                "matched_count": 0,
+                "detected_count": 0,
+            }), 200
+
+        detected_ids = []
+        detected_list = []
+        total_team_value = 0.0
+        unmatched = []
+
+        for d in detected:
+            pred = None
+            if d.matched and d.player_id in prediction_agent.predictions:
+                pred = prediction_agent.predictions[d.player_id]
+                d.expected_points = pred.expected_points
+                if d.player_id not in detected_ids:
+                    detected_ids.append(d.player_id)
+                    total_team_value += d.price
+            row = {
+                "raw_text": d.raw_text,
+                "name": d.matched_name if d.matched else d.raw_text,
+                "id": d.player_id,
+                "matched": d.matched,
+                "confidence": d.confidence,
+                "position": d.position,
+                "team": d.team,
+                "price": d.price,
+                "xPts": d.expected_points,
+                "gw_label": getattr(pred, 'gw_label', None) if pred else None,
+                "fixture": getattr(pred, 'fixture_info', 'No info') if pred else "No info",
+            }
+            detected_list.append(row)
+            if not d.matched:
+                unmatched.append(d.raw_text)
+
+        free_transfers = int(request.form.get('free_transfers', 1))
+        free_transfers = max(1, min(5, free_transfers))
+        try:
+            bank_in = request.form.get('bank')
+            bank = float(bank_in) if bank_in not in (None, '') else max(0.0, 100.0 - total_team_value)
+        except (TypeError, ValueError):
+            bank = max(0.0, 100.0 - total_team_value)
+        bank = max(0.0, round(bank, 1))
+
+        transfers = []
+        hit_advice = None
+        best_xi = None
+        note = None
+
+        if len(detected_ids) < 11:
+            note = f"Matched {len(detected_ids)}/15 players. Need at least 11 for transfers and Best XI — paste missing names below."
+            hit_advice = {
+                "should_take_hit": False,
+                "best_hit_transfer": None,
+                "total_hit_gain": 0,
+                "explanation": note,
+            }
+        else:
+            transfer_recs = optimizer.suggest_transfers(detected_ids, 5, bank + 3.0)
+            used_out_ids = set()
+            used_in_ids = set()
+            unique_transfers = []
+            for t in transfer_recs:
+                if t.player_out_id in used_out_ids or t.player_in_id in used_in_ids:
+                    continue
+                unique_transfers.append(t)
+                used_out_ids.add(t.player_out_id)
+                used_in_ids.add(t.player_in_id)
+
+            transfer_analysis = []
+            for i, t in enumerate(unique_transfers[:6]):
+                transfer_num = i + 1
+                is_free = transfer_num <= free_transfers
+                hit_cost = 0 if is_free else 4
+                net_gain = t.points_gain_next_5 - hit_cost
+                transfer_analysis.append({
+                    "out": {
+                        "id": t.player_out_id,
+                        "name": t.player_out_name,
+                        "team": t.player_out_team,
+                        "price": t.player_out_price,
+                        "xPts": round(t.player_out_xpts, 2),
+                    },
+                    "in": {
+                        "id": t.player_in_id,
+                        "name": t.player_in_name,
+                        "team": t.player_in_team,
+                        "price": t.player_in_price,
+                        "xPts": round(t.player_in_xpts, 2),
+                    },
+                    "points_gain": round(t.points_gain_next_5, 2),
+                    "price_change": t.price_change,
+                    "is_free": is_free,
+                    "hit_cost": hit_cost,
+                    "net_gain": round(net_gain, 2),
+                    "price_feasible": t.price_change <= bank,
+                    "recommended": net_gain > 0.5 and t.price_change <= bank,
+                })
+            transfers = transfer_analysis
+            free_gains = sum(t["points_gain"] for t in transfer_analysis[:free_transfers])
+            potential_hits = [t for t in transfer_analysis[free_transfers:] if t["net_gain"] > 0 and t["price_feasible"]]
+            if potential_hits:
+                best_hit = potential_hits[0]
+                hit_advice = {
+                    "should_take_hit": best_hit["net_gain"] > 1.0,
+                    "best_hit_transfer": best_hit,
+                    "total_hit_gain": round(sum(t["net_gain"] for t in potential_hits), 2),
+                    "explanation": "",
+                }
+                if best_hit["net_gain"] > 2.5:
+                    hit_advice["explanation"] = (
+                        f"Take a -4 for {best_hit['in']['name']}: net +{best_hit['net_gain']:.1f} pts over 5 GWs."
+                    )
+                elif best_hit["net_gain"] > 1.5:
+                    hit_advice["explanation"] = (
+                        f"Hit is worth considering for {best_hit['in']['name']} (+{best_hit['net_gain']:.1f} net)."
+                    )
+                else:
+                    hit_advice["explanation"] = (
+                        f"Marginal hit for {best_hit['in']['name']} (+{best_hit['net_gain']:.1f} net)."
+                    )
+            elif free_gains > 2:
+                hit_advice = {
+                    "should_take_hit": False,
+                    "best_hit_transfer": None,
+                    "total_hit_gain": 0,
+                    "explanation": f"Use your {free_transfers} free transfer(s) for +{free_gains:.1f} pts. No hit needed.",
+                }
+            else:
+                hit_advice = {
+                    "should_take_hit": False,
+                    "best_hit_transfer": None,
+                    "total_hit_gain": 0,
+                    "explanation": "Squad looks stable. Roll the transfer if the listed gains are small.",
+                }
+
+            matched_players = [d for d in detected if d.matched and d.player_id in prediction_agent.predictions]
+            if len(matched_players) >= 11:
+                by_pos = {"GKP": [], "DEF": [], "MID": [], "FWD": []}
+                for d in matched_players:
+                    if d.position in by_pos:
+                        by_pos[d.position].append(d)
+                for pos in by_pos:
+                    by_pos[pos].sort(key=lambda x: x.expected_points, reverse=True)
+                xi_players = []
+                if by_pos["GKP"]:
+                    xi_players.append(by_pos["GKP"][0])
+                xi_players.extend(by_pos["DEF"][:3])
+                xi_players.extend(by_pos["MID"][:2])
+                xi_players.extend(by_pos["FWD"][:1])
+                remaining = by_pos["DEF"][3:] + by_pos["MID"][2:] + by_pos["FWD"][1:]
+                remaining.sort(key=lambda x: x.expected_points, reverse=True)
+                for p in remaining:
+                    if len(xi_players) >= 11:
+                        break
+                    xi_players.append(p)
+                xi_players = xi_players[:11]
+                xi_players.sort(key=lambda x: ["GKP", "DEF", "MID", "FWD"].index(x.position))
+                captain = max(xi_players, key=lambda x: x.expected_points)
+                vice_pool = [p for p in xi_players if p.player_id != captain.player_id]
+                vice = max(vice_pool, key=lambda x: x.expected_points) if vice_pool else None
+                counts = {"DEF": 0, "MID": 0, "FWD": 0}
+                for p in xi_players:
+                    if p.position in counts:
+                        counts[p.position] += 1
+                total_xi_xpts = sum(p.expected_points for p in xi_players) + captain.expected_points
+                best_xi = {
+                    "formation": f"{counts['DEF']}-{counts['MID']}-{counts['FWD']}",
+                    "total_xpts": round(total_xi_xpts, 2),
+                    "captain": captain.matched_name,
+                    "vice_captain": vice.matched_name if vice else None,
+                    "players": [
+                        {
+                            "id": p.player_id,
+                            "name": p.matched_name,
+                            "position": p.position,
+                            "team": p.team,
+                            "price": p.price,
+                            "xPts": round(p.expected_points, 2),
+                            "is_captain": p.player_id == captain.player_id,
+                            "is_vice": vice is not None and p.player_id == vice.player_id,
+                        }
+                        for p in xi_players
+                    ],
+                }
+
+        chip_suggestions = []
+        if len(detected_ids) >= 11:
+            if 'chips' not in agents:
+                agents['chips'] = ChipAdvisor(agents['data'])
+            if not getattr(agents['chips'], 'gw_analyses', None):
+                agents['chips'].analyze_gameweeks(4)
+            xi_ids = [p["id"] for p in best_xi["players"]] if best_xi else []
+            chip_suggestions = agents['chips'].evaluate_chips_for_squad(detected_ids, xi_ids, prediction_agent)
+
+        return jsonify({
+            "gw": agents['data'].next_gw,
+            "detected_count": len(detected),
+            "matched_count": len(detected_ids),
+            "unmatched": unmatched,
+            "note": note,
+            "detected_players": detected_list,
+            "free_transfers": free_transfers,
+            "bank": bank,
+            "team_value": round(total_team_value, 1),
+            "transfers": transfers,
+            "hit_advice": hit_advice,
+            "best_xi": best_xi,
+            "chip_suggestions": chip_suggestions,
+        })
+    except Exception as e:
+        print(f"Upload error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
     
     try:
         # Read image data
@@ -831,6 +1078,7 @@ def api_chips():
     """Get chip strategy recommendations."""
     if 'chips' not in agents:
         agents['chips'] = ChipAdvisor(agents['data'])
+    if not getattr(agents['chips'], 'gw_analyses', None):
         agents['chips'].analyze_gameweeks(8)
     
     return jsonify(agents['chips'].to_dict())
@@ -865,12 +1113,19 @@ def api_ml_predictions():
     if 'ml' not in agents:
         print("🤖 Training ML model (first request, may take ~30s)...")
         agents['ml'] = MLPredictor(agents['data'])
+
+    if not agents['ml'].is_trained:
+        print("🤖 Training lagged ensemble (first run downloads season CSVs)...")
         agents['ml'].train()
-    
-    # Get predictions with rule-based comparison
-    rule_predictions = agents['predictions'].predictions
-    ml_preds = agents['ml'].predict_all_players(rule_predictions)
-    
+
+    prediction_agent = agents['predictions']
+    ml_preds = agents['ml'].predict_all_players(prediction_agent.predictions)
+
+    if agents['ml'].is_trained and not getattr(prediction_agent, '_ml_blended', False):
+        prediction_agent.blend_with_ml(ml_preds)
+        prediction_agent._ml_blended = True
+        cache.clear()
+
     return jsonify(agents['ml'].to_dict(ml_preds))
 
 
@@ -910,4 +1165,4 @@ if __name__ == '__main__':
     print("  GET  /api/player/<id>    - Player details")
     print("")
     
-    app.run(debug=False, host='0.0.0.0', port=5050)
+    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5050)))

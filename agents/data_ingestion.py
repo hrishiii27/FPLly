@@ -17,6 +17,8 @@ class Player:
     """Represents an FPL player with key attributes."""
     id: int
     web_name: str
+    first_name: str
+    second_name: str
     team_id: int
     team_name: str
     position: str
@@ -96,19 +98,19 @@ class FPLDataIngestion:
     
     def fetch_bootstrap_static(self) -> dict:
         """Fetch the main bootstrap-static endpoint."""
-        response = requests.get(f"{BASE_URL}bootstrap-static/")
+        response = requests.get(f"{BASE_URL}bootstrap-static/", timeout=20)
         response.raise_for_status()
         return response.json()
     
     def fetch_fixtures(self) -> list:
         """Fetch all fixtures."""
-        response = requests.get(f"{BASE_URL}fixtures/")
+        response = requests.get(f"{BASE_URL}fixtures/", timeout=20)
         response.raise_for_status()
         return response.json()
     
     def fetch_player_history(self, player_id: int) -> dict:
         """Fetch detailed history for a specific player."""
-        response = requests.get(f"{BASE_URL}element-summary/{player_id}/")
+        response = requests.get(f"{BASE_URL}element-summary/{player_id}/", timeout=12)
         response.raise_for_status()
         return response.json()
     
@@ -212,6 +214,8 @@ class FPLDataIngestion:
             player = Player(
                 id=p["id"],
                 web_name=p["web_name"],
+                first_name=p.get("first_name") or "",
+                second_name=p.get("second_name") or "",
                 team_id=p["team"],
                 team_name=self.teams[p["team"]].short_name if p["team"] in self.teams else "???",
                 position=self._position_map.get(p["element_type"], "???"),

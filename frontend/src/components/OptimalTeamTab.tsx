@@ -11,11 +11,11 @@ function Spinner() {
 
 const parseFixture = (fixStr) => {
   if (!fixStr || fixStr === 'No fixture') return { opp: '-', loc: '-', fdr: 3 }
-  const match = fixStr.match(/([A-Z]+)\(([HA])\) FDR:(\d)/)
+  const match = String(fixStr).match(/([A-Za-z]{2,4})\(([HA])\).*FDR:?\s*(\d)/)
   if (match) {
-    return { opp: match[1], loc: match[2], fdr: parseInt(match[3]) }
+    return { opp: match[1], loc: match[2], fdr: parseInt(match[3], 10) }
   }
-  return { opp: fixStr, loc: '', fdr: 3 }
+  return { opp: String(fixStr).slice(0, 8), loc: '', fdr: 3 }
 }
 
 const FDRColor = ({ fdr }) => {
@@ -114,10 +114,6 @@ export default function OptimalTeamTab() {
     fetchOptimal()
   }, [])
 
-  const getPlayersByPos = (players, pos) => {
-    return players?.filter(p => p.position === pos) || []
-  }
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4 text-on-surface">
@@ -127,6 +123,14 @@ export default function OptimalTeamTab() {
         </div>
       </div>
     )
+  }
+
+  if (!data?.starting_xi?.length) {
+    return <p className="py-20 text-center text-outline">Couldn’t build an XI. Restart the API and try again.</p>
+  }
+
+  const getPlayersByPos = (players, pos) => {
+    return players?.filter(p => p.position === pos) || []
   }
 
   const gkp = getPlayersByPos(data?.starting_xi, 'GKP')
@@ -199,13 +203,13 @@ export default function OptimalTeamTab() {
           <div className="flex justify-center w-full relative z-10">
             {gkp.map(p => <PlayerCard key={p.id} player={p} />)}
           </div>
-          <div className="flex justify-center w-full gap-4 md:gap-12 relative z-10 hidden={def.length === 0}">
+          <div className={`flex justify-center w-full gap-4 md:gap-12 relative z-10 ${def.length === 0 ? 'hidden' : ''}`}>
             {def.map(p => <PlayerCard key={p.id} player={p} />)}
           </div>
-          <div className="flex justify-center w-full gap-4 md:gap-12 relative z-10 hidden={mid.length === 0}">
+          <div className={`flex justify-center w-full gap-4 md:gap-12 relative z-10 ${mid.length === 0 ? 'hidden' : ''}`}>
             {mid.map(p => <PlayerCard key={p.id} player={p} />)}
           </div>
-          <div className="flex justify-center w-full gap-4 md:gap-12 relative z-10 hidden={fwd.length === 0}">
+          <div className={`flex justify-center w-full gap-4 md:gap-12 relative z-10 ${fwd.length === 0 ? 'hidden' : ''}`}>
             {fwd.map(p => <PlayerCard key={p.id} player={p} />)}
           </div>
         </div>

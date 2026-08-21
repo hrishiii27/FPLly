@@ -28,7 +28,22 @@ function formatFeatureName(name) {
         'minutes_ratio': 'Minutes %',
         'goal_involvement_rate': 'Goal Inv. Rate',
         'xg_overperformance': 'xG Overperf.',
-        'consistency_score': 'Consistency'
+        'consistency_score': 'Consistency',
+        'minutes_roll5': 'Minutes (last 5)',
+        'points_roll5': 'Points (last 5)',
+        'points_lag1': 'Last GW Points',
+        'xg_roll5': 'xG (last 5)',
+        'xa_roll5': 'xA (last 5)',
+        'xgi_roll5': 'xGI (last 5)',
+        'ict_roll5': 'ICT (last 5)',
+        'bonus_roll5': 'Bonus (last 5)',
+        'cs_roll5': 'CS (last 5)',
+        'minutes_ratio_roll5': 'Minutes %',
+        'gi_rate_roll5': 'Goal Inv. Rate',
+        'xg_overperf_roll5': 'xG Overperf.',
+        'was_home': 'Home Fixture',
+        'pos_code': 'Position',
+        'fdr': 'Fixture Difficulty'
     }
     return mapping[name] || name.replace(/_/g, ' ')
 }
@@ -56,8 +71,18 @@ export default function MLTab() {
       <div className="flex flex-col items-center justify-center py-20 gap-4 text-on-surface">
         <Spinner />
         <div className="text-center font-mono opacity-80">
-          <p className="text-sm uppercase tracking-widest text-primary">Initializing Neural Nets...</p>
+          <p className="text-sm uppercase tracking-widest text-primary">Training next-GW ensemble…</p>
+          <p className="text-[11px] mt-2 text-outline">First run downloads season CSVs and fixtures (FDR). Later loads are cached.</p>
         </div>
+      </div>
+    )
+  }
+
+  if (!data?.model_info) {
+    return (
+      <div className="py-20 text-center text-outline">
+        <p className="font-headline text-xl mb-2">Couldn’t load the ensemble</p>
+        <p className="text-sm">Check that the API is running, then refresh this tab.</p>
       </div>
     )
   }
@@ -80,14 +105,20 @@ export default function MLTab() {
               Predictive<br /><span className="text-primary italic">Intelligence</span>
             </h1>
             <p className="mt-6 text-lg text-outline font-body leading-relaxed max-w-xl">
-              An ensemble of XGBoost, Random Forest, and Gradient Boosting models trained on half a decade of underlying metric arrays to decode FPL performance.
+              Next-gameweek forecasts from lagged form, xG/xA, and official FDR. Metrics are measured on a held-out season — not the same match the model already saw.
             </p>
+            {stats.seasons && (
+              <p className="mt-3 font-mono text-xs text-outline">
+                Trained on {Array.isArray(stats.seasons) ? stats.seasons.join(' · ') : 'recent seasons'}
+              </p>
+            )}
           </div>
           <div className="hidden lg:block text-right">
             <div className="bg-surface-container-high border border-surface-container-highest p-4 rounded-xl font-mono text-xs text-secondary-fixed">
-              <p className="mb-1 text-outline">System Status</p>
-              <p className="text-secondary">&gt; ENSEMBLE ACTIVE</p>
-              <p>&gt; R² {(stats.r2_score*100).toFixed(1)}%</p>
+              <p className="mb-1 text-outline">Holdout eval</p>
+              <p className="text-secondary">&gt; NEXT-GW TASK</p>
+              <p>&gt; MAE {stats.mae ?? '—'} pts</p>
+              <p>&gt; vs mean {stats.baseline_mae ?? '—'}</p>
             </div>
           </div>
         </div>
@@ -99,18 +130,23 @@ export default function MLTab() {
           <div>
             <span className="material-symbols-outlined text-primary mb-4 text-4xl tracking-normal">target</span>
             <h4 className="font-headline font-bold text-xl uppercase">Ensemble</h4>
-            <p className="font-body text-xs text-outline mt-2">Weighted average of core models</p>
+            <p className="font-body text-xs text-outline mt-2">Next-GW error vs a naive “predict the average” baseline. Lower MAE is better; R² near 1.0 here would be a leak.</p>
           </div>
           <div className="mt-6 flex justify-between items-end border-t border-surface-container-high pt-4">
             <div>
-              <p className="font-headline text-3xl font-black">{stats.mae}</p>
-              <p className="font-label text-[10px] uppercase tracking-widest text-outline">MAE Score</p>
+              <p className="font-headline text-3xl font-black">{stats.mae ?? '—'}</p>
+              <p className="font-label text-[10px] uppercase tracking-widest text-outline">MAE (pts)</p>
             </div>
-            <div>
-              <p className="font-headline text-xl font-black text-secondary">{stats.r2_score}</p>
-              <p className="font-label text-[10px] uppercase tracking-widest text-outline">R²</p>
+            <div className="text-right">
+              <p className="font-headline text-xl font-black text-secondary">{stats.r2_score ?? '—'}</p>
+              <p className="font-label text-[10px] uppercase tracking-widest text-outline">Holdout R²</p>
             </div>
           </div>
+          {stats.skill_vs_mean != null && (
+            <p className="mt-3 font-mono text-[10px] text-outline">
+              Skill vs mean: {(stats.skill_vs_mean * 100).toFixed(0)}% better than always guessing {stats.baseline_mae} MAE
+            </p>
+          )}
         </div>
         
         {/* Child Models */}
@@ -210,6 +246,7 @@ export default function MLTab() {
               <tr>
                 <th className="px-6 py-4 text-left">Player</th>
                 <th className="px-6 py-4 text-left">Team</th>
+                <th className="px-6 py-4 text-right">FDR</th>
                 <th className="px-6 py-4 text-right">Machine xPts</th>
                 <th className="px-6 py-4 text-right">Base xPts</th>
                 <th className="px-6 py-4 text-right">Variance</th>
@@ -222,6 +259,7 @@ export default function MLTab() {
                 <tr key={i} className="hover:bg-surface-container-low transition-colors">
                   <td className="px-6 py-4 font-headline font-bold text-on-surface">{p.name}</td>
                   <td className="px-6 py-4 font-body text-outline text-xs">{p.team || 'UNK'}</td>
+                  <td className="px-6 py-4 text-right font-mono text-xs">{p.fdr ?? '—'}</td>
                   <td className="px-6 py-4 font-bold text-primary text-right text-lg">{p.ml_xpts?.toFixed(2)}</td>
                   <td className="px-6 py-4 opacity-50 text-right">{p.rule_xpts?.toFixed(2)}</td>
                   <td className="px-6 py-4 text-right">

@@ -60,7 +60,7 @@ export default function HistoricalTab() {
               Historical <span className="text-primary italic">Context</span>
             </h1>
             <p className="mt-6 text-lg text-outline font-body leading-relaxed max-w-xl">
-              Data from the 2019-2024 seasons. Identify elite finishers by analyzing long-term xG overperformance and career momentum.
+              Data from 2021–22 through 2025–26. Identify finishers who beat their xG over multiple seasons.
             </p>
           </div>
         </div>

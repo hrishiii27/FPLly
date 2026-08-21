@@ -70,9 +70,9 @@ export default function FixturesTab() {
         <div className="hidden md:flex items-center px-6 py-4 border-b border-surface-container-high bg-surface-container-low">
           <div className="w-32 font-label text-[10px] uppercase tracking-widest text-outline">Club</div>
           <div className="w-24 font-label text-[10px] uppercase tracking-widest text-outline text-center relative pr-4 group cursor-help">
-            Swing
+            Avg FDR
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-surface-container-highest text-on-surface p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none text-xs normal-case tracking-normal text-left">
-              Aggregate difficulty swing over the next 5 games. Lower is better.
+              Mean fixture difficulty over the next 5 gameweeks. Lower is easier.
             </div>
           </div>
           <div className="flex-1 flex gap-2">
@@ -94,8 +94,8 @@ export default function FixturesTab() {
               <div className="flex items-center justify-between md:justify-start mb-4 md:mb-0 w-full md:w-auto">
                 <div className="w-32 font-headline font-bold text-lg text-on-surface uppercase tracking-tight">{team.team}</div>
                 <div className="md:w-24 flex md:justify-center pr-0 md:pr-4">
-                  <div className={`font-mono font-bold text-sm px-2 py-0.5 rounded ${team.swing_score < 15 ? 'bg-primary/20 text-primary border border-primary/30' : team.swing_score > 20 ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-surface-container-highest text-outline'}`}>
-                    {team.swing_score.toFixed(0)}
+                  <div className={`font-mono font-bold text-sm px-2 py-0.5 rounded ${team.avg_fdr <= 2.4 ? 'bg-primary/20 text-primary border border-primary/30' : team.avg_fdr >= 3.4 ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-surface-container-highest text-outline'}`}>
+                    {team.avg_fdr?.toFixed(1)}
                   </div>
                 </div>
               </div>

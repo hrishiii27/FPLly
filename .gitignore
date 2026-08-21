@@ -25,6 +25,8 @@ Thumbs.db
 # ML models (can be regenerated)
 *.pkl
 *.joblib
+data/historical_cache/
+data/ml_ensemble.joblib
 
 # Artifacts
 .gemini/

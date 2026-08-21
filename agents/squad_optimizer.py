@@ -55,71 +55,82 @@ class SquadOptimizer:
     POSITION_LIMITS = {"GKP": 2, "DEF": 5, "MID": 5, "FWD": 3}
     MIN_PLAY = {"GKP": 1, "DEF": 3, "MID": 2, "FWD": 1}
     MAX_PLAY = {"GKP": 1, "DEF": 5, "MID": 5, "FWD": 3}
+    MIN_COST = {"GKP": 4.0, "DEF": 4.0, "MID": 4.5, "FWD": 4.5}
     
     def __init__(self, prediction_agent: PointsPredictionAgent):
         self.predictions = prediction_agent
         self.data = prediction_agent.data
     
+    def _min_fill_cost(self, position_counts: dict) -> float:
+        return sum(
+            max(0, self.POSITION_LIMITS[pos] - position_counts[pos]) * self.MIN_COST[pos]
+            for pos in self.POSITION_LIMITS
+        )
+    
+    def _can_add(self, player, selected_ids, team_counts, position_counts, total_cost, budget) -> bool:
+        if player.player_id in selected_ids:
+            return False
+        if position_counts[player.position] >= self.POSITION_LIMITS[player.position]:
+            return False
+        if team_counts.get(player.team, 0) >= self.MAX_PER_TEAM:
+            return False
+        new_counts = dict(position_counts)
+        new_counts[player.position] += 1
+        if total_cost + player.price + self._min_fill_cost(new_counts) > budget + 0.05:
+            return False
+        return True
+    
     def optimize_team(self, budget: float = 100.0) -> OptimizedSquad:
-        """Build an optimal team from scratch."""
+        """Build a valid 15-man squad, picking highest xPts while reserving bench budget."""
         
-        # Get all available predictions sorted by value
         all_preds = [
             p for p in self.predictions.predictions.values()
-            if p.minutes_tag in ["Nailed", "unknown"] 
-            and p.confidence >= 50
-            and p.gw_multiplier > 0  # Hard-exclude BGW players
+            if p.gw_multiplier > 0
+            and p.minutes_tag not in ("Injured", "Suspended")
+            and p.expected_points > 0
         ]
         
-        # Group by position
-        by_position = {"GKP": [], "DEF": [], "MID": [], "FWD": []}
-        for p in all_preds:
-            by_position[p.position].append(p)
-        
-        # Sort each position by expected points
-        for pos in by_position:
-            by_position[pos] = sorted(by_position[pos], key=lambda x: x.expected_points, reverse=True)
-        
-        # Greedy selection with constraints
         selected = []
+        selected_ids = set()
         team_counts = {}
         position_counts = {"GKP": 0, "DEF": 0, "MID": 0, "FWD": 0}
-        total_cost = 0
+        total_cost = 0.0
         
-        # First pass: select top players for each position
-        for pos, limit in self.POSITION_LIMITS.items():
-            for p in by_position[pos]:
-                if position_counts[pos] >= limit:
-                    break
-                if team_counts.get(p.team, 0) >= self.MAX_PER_TEAM:
-                    continue
-                if total_cost + p.price > budget:
-                    continue
-                
+        ranked = sorted(all_preds, key=lambda x: (x.expected_points, -x.price), reverse=True)
+        for p in ranked:
+            if len(selected) >= self.SQUAD_SIZE:
+                break
+            if self._can_add(p, selected_ids, team_counts, position_counts, total_cost, budget):
                 selected.append(p)
-                position_counts[pos] += 1
+                selected_ids.add(p.player_id)
+                position_counts[p.position] += 1
                 team_counts[p.team] = team_counts.get(p.team, 0) + 1
                 total_cost += p.price
         
-        # Sort by expected points for starting XI selection
-        selected.sort(key=lambda x: x.expected_points, reverse=True)
+        if len(selected) < self.SQUAD_SIZE:
+            for p in sorted(all_preds, key=lambda x: x.price):
+                if len(selected) >= self.SQUAD_SIZE:
+                    break
+                if self._can_add(p, selected_ids, team_counts, position_counts, total_cost, budget):
+                    selected.append(p)
+                    selected_ids.add(p.player_id)
+                    position_counts[p.position] += 1
+                    team_counts[p.team] = team_counts.get(p.team, 0) + 1
+                    total_cost += p.price
         
-        # Select starting XI (best formation)
         starting = self._select_starting_xi(selected)
-        bench = [p for p in selected if p not in starting]
-        
-        # Sort bench by priority
+        bench = [p for p in selected if p.player_id not in {s.player_id for s in starting}]
         bench.sort(key=lambda x: x.expected_points, reverse=True)
         
-        # Captain selection
+        if not starting:
+            starting = selected[:11]
+            bench = selected[11:]
+        
         captain = max(starting, key=lambda x: x.expected_points)
-        remaining = [p for p in starting if p != captain]
-        vice_captain = max(remaining, key=lambda x: x.expected_points)
+        remaining = [p for p in starting if p.player_id != captain.player_id]
+        vice_captain = max(remaining, key=lambda x: x.expected_points) if remaining else captain
         
-        # Calculate formation
         formation = self._get_formation(starting)
-        
-        # Calculate expected points (captain counted double)
         xpts = sum(p.expected_points for p in starting) + captain.expected_points
         
         return OptimizedSquad(
@@ -309,7 +320,7 @@ class SquadOptimizer:
         
         return {
             "recommendation": recommendation,
-            "hit_cost": best["hit_cost"] if best["net_gain_horizon"] > free_only_gain * gameweeks else 0,
+            "hit_cost": best["hit_cost"] if best["net_gain_horizon"] > free_only_gain_next_5 else 0,
             "total_gain": best["net_gain_horizon"],
             "breakeven_gws": best["breakeven_gws"],
             "options": results

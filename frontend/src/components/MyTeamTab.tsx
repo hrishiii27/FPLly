@@ -26,6 +26,9 @@ export default function MyTeamTab() {
   const [results, setResults] = useState<any>(null)
   const [dragOver, setDragOver] = useState(false)
   const [freeTransfers, setFreeTransfers] = useState(1)
+  const [bank, setBank] = useState('')
+  const [names, setNames] = useState('')
+  const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (e) => {
@@ -43,6 +46,7 @@ export default function MyTeamTab() {
     reader.onload = (e) => {
       setImageUrl(e.target.result)
       setResults(null)
+      setError('')
     }
     reader.readAsDataURL(file)
   }
@@ -55,14 +59,22 @@ export default function MyTeamTab() {
   }
 
   const analyzeTeam = async () => {
-    if (!imageUrl) return
+    if (!imageUrl && !names.trim()) {
+      setError('Upload a screenshot or paste at least 11 player names.')
+      return
+    }
 
     setAnalyzing(true)
+    setError('')
     try {
-      const blob = await fetch(imageUrl).then(r => r.blob())
       const formData = new FormData()
-      formData.append('image', blob, 'team.png')
       formData.append('free_transfers', freeTransfers.toString())
+      if (bank !== '') formData.append('bank', bank)
+      if (names.trim()) formData.append('names', names.trim())
+      if (imageUrl) {
+        const blob = await fetch(imageUrl).then(r => r.blob())
+        formData.append('image', blob, 'team.png')
+      }
 
       const res = await fetch('/api/upload-team', {
         method: 'POST',
@@ -70,14 +82,16 @@ export default function MyTeamTab() {
       })
       const data = await res.json()
 
-      if (data.error) {
-        alert('Error: ' + data.error)
+      if (data.error && !data.detected_players) {
+        setError(data.error)
+        setResults(null)
       } else {
+        if (data.error) setError(data.error)
         setResults(data)
       }
-    } catch (error) {
-      console.error('Analysis failed:', error)
-      alert('Failed to analyze team')
+    } catch (err) {
+      console.error('Analysis failed:', err)
+      setError('Failed to analyze team. Restart the Flask server if EasyOCR is downloading models.')
     }
     setAnalyzing(false)
   }
@@ -85,12 +99,13 @@ export default function MyTeamTab() {
   const resetUpload = () => {
     setImageUrl(null)
     setResults(null)
+    setError('')
+    setNames('')
   }
 
   return (
     <div className="space-y-12 animate-in fade-in duration-500 max-w-5xl mx-auto">
       
-      {/* Hero Header */}
       <section className="space-y-4">
         <div className="flex items-end justify-between">
           <div className="max-w-2xl text-on-surface">
@@ -99,40 +114,92 @@ export default function MyTeamTab() {
               Vision<br /><span className="text-primary italic">Analysis</span>
             </h1>
             <p className="mt-6 text-lg text-outline font-body leading-relaxed max-w-xl">
-              Upload a screenshot of your current squad. Our vision model will interpret the layout and generate mathematically optimal transfer pathways.
+              Upload a screenshot of your FPL pitch, or paste squad names. We match players to live data and propose transfers, Best XI, and chips.
             </p>
           </div>
         </div>
       </section>
 
-      {!imageUrl ? (
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center
-            ${dragOver
-              ? 'border-primary bg-primary/5'
-              : 'border-surface-container-highest hover:border-outline bg-surface-container-lowest'
-          }`}>
-          <div className="h-20 w-20 rounded-full bg-surface-container-low flex items-center justify-center mb-6">
-            <span className="material-symbols-outlined text-4xl text-primary">add_photo_alternate</span>
+      {!imageUrl && !results ? (
+        <div className="space-y-6">
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center
+              ${dragOver
+                ? 'border-primary bg-primary/5'
+                : 'border-surface-container-highest hover:border-outline bg-surface-container-lowest'
+            }`}>
+            <div className="h-20 w-20 rounded-full bg-surface-container-low flex items-center justify-center mb-6">
+              <span className="material-symbols-outlined text-4xl text-primary">add_photo_alternate</span>
+            </div>
+            <h3 className="font-headline text-2xl font-bold uppercase text-on-surface mb-2 tracking-tight">Drop your team screenshot here</h3>
+            <p className="font-body text-outline mb-6">PNG or JPG of the official FPL pitch view works best</p>
+            <button type="button" className="bg-primary text-on-primary font-label text-xs uppercase tracking-widest px-8 py-3 rounded-full hover:bg-primary/90 transition-colors">
+              Select Screenshot
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" onChange={handleFileSelect} className="hidden" />
           </div>
-          <h3 className="font-headline text-2xl font-bold uppercase text-on-surface mb-2 tracking-tight">Drop your team screenshot here</h3>
-          <p className="font-body text-outline mb-6">Supports PNG & JPG formats</p>
-          <button className="bg-primary text-on-primary font-label text-xs uppercase tracking-widest px-8 py-3 rounded-full hover:bg-primary/90 transition-colors">
-            Select Screenshot
-          </button>
-          <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" onChange={handleFileSelect} className="hidden" />
+
+          <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-6 space-y-4">
+            <label className="font-label text-xs uppercase tracking-widest text-outline">Or paste 15 squad names</label>
+            <textarea
+              value={names}
+              onChange={(e) => setNames(e.target.value)}
+              placeholder="Salah, Haaland, Palmer, … (comma or newline separated)"
+              className="w-full min-h-[120px] bg-surface-container-low border border-surface-container-high rounded-lg p-4 font-body text-sm text-on-surface"
+            />
+            <div className="flex flex-wrap gap-4 items-end">
+              <div>
+                <label className="font-label text-xs uppercase tracking-widest text-outline block mb-2">Free transfers</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setFreeTransfers(n)}
+                      className={`w-10 h-10 rounded-lg font-headline font-bold ${freeTransfers === n ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-outline'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="font-label text-xs uppercase tracking-widest text-outline block mb-2">Bank (£m, optional)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={bank}
+                  onChange={(e) => setBank(e.target.value)}
+                  placeholder="e.g. 0.4"
+                  className="w-28 bg-surface-container-low border border-surface-container-high rounded-lg px-3 py-2 font-mono text-sm"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={analyzeTeam}
+                disabled={analyzing || !names.trim()}
+                className="bg-primary text-on-primary font-label text-xs uppercase tracking-widest px-8 py-3 rounded-full disabled:opacity-50"
+              >
+                {analyzing ? 'Analyzing…' : 'Analyze names'}
+              </button>
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+          </div>
         </div>
       ) : (
         <div className="space-y-8">
           <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-8 flex flex-col md:flex-row gap-8 items-center">
             
-            <div className="flex-shrink-0 w-64 rounded-xl overflow-hidden border border-surface-container-highest shadow-xl">
-              <img src={imageUrl} alt="Team Screenshot" className="w-full h-auto" />
-            </div>
+            {imageUrl && (
+              <div className="flex-shrink-0 w-64 rounded-xl overflow-hidden border border-surface-container-highest shadow-xl">
+                <img src={imageUrl} alt="Team Screenshot" className="w-full h-auto" />
+              </div>
+            )}
             
             <div className="flex-1 flex flex-col gap-6 w-full">
               <div className="flex flex-col gap-3">
@@ -141,6 +208,7 @@ export default function MyTeamTab() {
                   {[1, 2, 3, 4, 5].map(n => (
                     <button
                       key={n}
+                      type="button"
                       onClick={() => setFreeTransfers(n)}
                       className={`w-12 h-12 rounded-lg font-headline text-xl font-bold transition-all
                         ${freeTransfers === n ? 'bg-primary text-on-primary shadow-lg' : 'bg-surface-container-high text-outline hover:text-on-surface hover:bg-surface-container-highest'}`}
@@ -150,6 +218,24 @@ export default function MyTeamTab() {
                   ))}
                 </div>
               </div>
+              <div>
+                <label className="font-label text-xs uppercase tracking-widest text-outline block mb-2">Bank (£m)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={bank}
+                  onChange={(e) => setBank(e.target.value)}
+                  placeholder="leave blank to estimate"
+                  className="w-40 bg-surface-container-low border border-surface-container-high rounded-lg px-3 py-2 font-mono text-sm"
+                />
+              </div>
+              <textarea
+                value={names}
+                onChange={(e) => setNames(e.target.value)}
+                placeholder="Optional: paste names to override OCR"
+                className="w-full min-h-[80px] bg-surface-container-low border border-surface-container-high rounded-lg p-3 font-body text-sm"
+              />
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-surface-container-high">
                 <button 
@@ -157,7 +243,7 @@ export default function MyTeamTab() {
                   disabled={analyzing} 
                   className="flex-1 bg-primary text-on-primary font-label text-xs uppercase tracking-widest px-8 py-4 rounded-full flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {analyzing ? <Spinner /> : <><span className="material-symbols-outlined text-[18px]">manage_search</span> Analyze Vision Data</>}
+                  {analyzing ? <Spinner /> : <><span className="material-symbols-outlined text-[18px]">manage_search</span> Analyze squad</>}
                 </button>
                 <button 
                   onClick={resetUpload} 
@@ -166,6 +252,10 @@ export default function MyTeamTab() {
                   Reset
                 </button>
               </div>
+              {analyzing && (
+                <p className="text-sm text-outline">First EasyOCR run can take a minute while models download.</p>
+              )}
+              {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
 
           </div>
@@ -173,16 +263,36 @@ export default function MyTeamTab() {
           {results && (
             <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
               
-              {/* Summary Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatBox label="Players Synthesized" value={`${results.matched_count}/${results.detected_count}`} />
+                <StatBox label="Players matched" value={`${results.matched_count}/${results.detected_count}`} />
                 <StatBox label="Squad Valuation" value={`£${results.team_value}M`} />
                 <StatBox label="Bank Balance" value={`£${results.bank}M`} highlight={results.bank > 0.5} />
                 <StatBox label="Free Transfers" value={results.free_transfers} />
               </div>
+              {results.note && (
+                <p className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">{results.note}</p>
+              )}
+
+              {results.detected_players?.length > 0 && (
+                <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-6">
+                  <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface mb-4">Detected squad</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {results.detected_players.map((p, i) => (
+                      <div key={i} className={`p-3 rounded-lg border ${p.matched ? 'border-surface-container-high' : 'border-red-500/40 bg-red-500/5'}`}>
+                        <div className="font-label text-[9px] uppercase tracking-widest text-outline">{p.matched ? p.position : 'unmatched'}</div>
+                        <div className="font-headline font-bold text-sm truncate">{p.name}</div>
+                        {p.matched ? (
+                          <div className="font-mono text-[10px] text-outline">{p.team} · £{p.price}m · {p.xPts} xPts</div>
+                        ) : (
+                          <div className="text-[10px] text-red-500">OCR: {p.raw_text}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Hit Advice */}
                 {results.hit_advice && (
                   <div className={`border rounded-xl p-8 relative overflow-hidden grain-overlay ${results.hit_advice.should_take_hit
                       ? 'bg-secondary/10 border-secondary'
@@ -198,17 +308,13 @@ export default function MyTeamTab() {
                     <p className="font-body text-on-surface opacity-90 leading-relaxed text-sm md:text-base relative z-10">
                       {results.hit_advice.explanation}
                     </p>
-                    <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
-                      <span className="material-symbols-outlined text-9xl tracking-normal">{results.hit_advice.should_take_hit ? 'warning' : 'verified'}</span>
-                    </div>
                   </div>
                 )}
 
-                {/* Best XI */}
                 {results.best_xi && (
                   <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-container-high">
-                      <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface">Base XI Projection</h3>
+                      <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface">Best XI</h3>
                       <div className="flex gap-2 font-label text-[10px] uppercase tracking-widest">
                         <span className="bg-surface-container-high px-3 py-1.5 rounded text-outline">{results.best_xi.formation}</span>
                         <span className="bg-primary/20 text-primary px-3 py-1.5 rounded font-bold border border-primary/30">{results.best_xi.total_xpts} xPts</span>
@@ -240,38 +346,29 @@ export default function MyTeamTab() {
                 )}
               </div>
 
-              {/* Transfer Suggestions */}
               {results.transfers && results.transfers.length > 0 && (
                 <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl overflow-hidden">
                   <div className="p-6 border-b border-surface-container-high">
-                    <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface">Suggested Pathways</h3>
+                    <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface">Suggested transfers</h3>
                   </div>
                   <div className="divide-y divide-surface-container-high">
                     {results.transfers.map((t, i) => (
-                      <div key={i} className={`p-6 flex flex-col md:flex-row items-center gap-6 ${t.is_free ? 'bg-surface-container-lowest' : 'bg-surface-container-lowest/50'}`}>
-                        
+                      <div key={i} className="p-6 flex flex-col md:flex-row items-center gap-6">
                         <div className="flex-1 flex items-center justify-between w-full md:w-auto bg-surface-container-low p-4 rounded-xl border border-surface-container-highest relative">
-                           {/* OUT */}
                            <div className="w-[40%] text-left">
                              <div className="font-label text-[10px] text-red-500 uppercase tracking-widest mb-1">Transfer Out</div>
                              <div className="font-headline font-bold text-on-surface">{t.out.name}</div>
                              <div className="font-mono text-[10px] text-outline mt-1">{t.out.team} • £{t.out.price}M</div>
                            </div>
-                           
-                           {/* ICON */}
                            <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 bg-surface-container-lowest w-8 h-8 rounded-full border border-surface-container-high flex items-center justify-center text-outline z-10">
                               <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                            </div>
-
-                           {/* IN */}
                            <div className="w-[40%] text-right">
                              <div className="font-label text-[10px] text-emerald-500 uppercase tracking-widest mb-1">Transfer In</div>
                              <div className="font-headline font-bold text-on-surface">{t.in.name}</div>
                              <div className="font-mono text-[10px] text-outline mt-1">{t.in.team} • £{t.in.price}M</div>
                            </div>
                         </div>
-
-                        {/* METRICS */}
                         <div className="flex gap-6 items-center flex-shrink-0">
                           <div className="text-center">
                              <div className="font-label text-[9px] uppercase tracking-widest text-outline mb-1">Net Flow</div>
@@ -292,17 +389,15 @@ export default function MyTeamTab() {
                               )}
                           </div>
                         </div>
-
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Chip Suggestions */}
               {results.chip_suggestions && results.chip_suggestions.length > 0 && (
                 <div className="bg-secondary/5 border border-secondary/20 rounded-xl p-6">
-                  <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface mb-6">Chip Stratagem</h3>
+                  <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface mb-6">Chip suggestions</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {results.chip_suggestions.map((chip, i) => (
                       <div key={i} className="bg-surface-container-lowest rounded-lg p-5 border border-surface-container-high relative overflow-hidden">

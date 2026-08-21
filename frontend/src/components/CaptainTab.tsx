@@ -26,11 +26,15 @@ export default function CaptainTab() {
     fetchCaptains()
   }, [])
 
-  if (loading || captains.length < 3) return <Spinner />
+  if (loading) return <Spinner />
+  if (!captains.length) {
+    return <p className="py-20 text-center text-outline">No captain data yet — restart the API after the latest prediction fixes.</p>
+  }
 
-  const primary = captains[0];
-  const secondary = captains[1];
-  const differential = captains.find(c => c.ownership < 15) || captains[2];
+  const primary = captains[0]
+  const secondary = captains[1] || captains[0]
+  const differential = captains.find(c => (c.ownership || 100) < 15 && c.id !== primary.id) || captains[2] || secondary
+  const conf = (c) => Math.round(c?.confidence || 0)
 
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
@@ -43,7 +47,7 @@ export default function CaptainTab() {
               THE CAPTAINCY <br /><span className="text-primary italic">MANIFESTO</span>
             </h1>
             <p className="mt-6 text-lg text-outline font-body leading-relaxed max-w-xl">
-              Gameweek demands clinical precision. Our AI models have processed 42,000 match permutations to identify the definitive ceiling-breakers for your squad.
+              Ranked by next-GW xPts and ceiling. Ownership is official FPL selected-by, not a made-up consensus.
             </p>
           </div>
           <div className="hidden lg:block text-right">
@@ -69,9 +73,9 @@ export default function CaptainTab() {
             <p className="font-label text-outline uppercase tracking-[0.2em] text-xs mt-2">{primary.team} • {primary.fixture}</p>
 
             <div className="absolute bottom-6 left-6 z-20">
-              <span className="bg-secondary text-on-primary px-3 py-1 rounded-full text-xs font-label uppercase tracking-widest flex items-center gap-1">
+                <span className="bg-secondary text-on-primary px-3 py-1 rounded-full text-xs font-label uppercase tracking-widest flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm tracking-normal">verified</span>
-                High Confidence
+                {conf(primary)}% confidence
               </span>
             </div>
           </div>
@@ -90,16 +94,15 @@ export default function CaptainTab() {
                   "{primary.explanation?.factors?.[0] || 'Unprecedented statistical ceiling against weak defensive block.'}"
                 </p>
               </div>
-              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6">
                 <div className="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-                  <div className="h-full bg-secondary" style={{ width: '94%' }}></div>
+                  <div className="h-full bg-secondary" style={{ width: `${Math.min(conf(primary), 100)}%` }}></div>
                 </div>
-                <span className="font-label text-xs font-bold text-secondary">94% SCORE</span>
+                <span className="font-label text-xs font-bold text-secondary">{conf(primary)}% CONF</span>
               </div>
             </div>
-            <button className="w-full bg-on-background text-background font-headline py-4 rounded-full flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all group cursor-pointer">
-              CONFIRM CAPTAIN
-              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform tracking-normal">arrow_forward</span>
+            <button className="w-full bg-on-background text-background font-headline py-4 rounded-full flex items-center justify-center gap-2 cursor-default">
+              {primary.ownership?.toFixed(1) || '—'}% owned · ceiling {primary.xPts_high?.toFixed(1)}
             </button>
           </div>
         </div>
@@ -122,8 +125,8 @@ export default function CaptainTab() {
               {secondary.explanation?.factors?.[0] || 'Highly consistent underlying output metrics.'}
             </p>
             <div className="border-t border-surface-container-high pt-4 flex justify-between items-center">
-              <span className="font-label text-[10px] text-outline uppercase tracking-widest">Confidence: 88%</span>
-              <button className="text-primary font-label text-xs font-bold uppercase hover:underline cursor-pointer">View Intel</button>
+              <span className="font-label text-[10px] text-outline uppercase tracking-widest">Confidence: {conf(secondary)}%</span>
+              <span className="text-primary font-label text-xs font-bold uppercase">{secondary.ownership?.toFixed(1) || '—'}% TSB</span>
             </div>
           </div>
 
@@ -180,28 +183,28 @@ export default function CaptainTab() {
               <div className="space-y-1">
                 <div className="flex justify-between font-label text-[10px] uppercase">
                   <span>{primary.name}</span>
-                  <span>{primary.ownership > 0 ? primary.ownership.toFixed(1) : 48}%</span>
+                  <span>{primary.ownership > 0 ? primary.ownership.toFixed(1) : '—'}%</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(primary.ownership||48, 100)}%` }}></div>
+                  <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(primary.ownership || 0, 100)}%` }}></div>
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between font-label text-[10px] uppercase">
                   <span>{secondary.name}</span>
-                  <span>{secondary.ownership > 0 ? secondary.ownership.toFixed(1) : 22}%</span>
+                  <span>{secondary.ownership > 0 ? secondary.ownership.toFixed(1) : '—'}%</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-white/40 rounded-full transition-all duration-1000" style={{ width: `${Math.min(secondary.ownership||22, 100)}%` }}></div>
+                  <div className="h-full bg-white/40 rounded-full transition-all duration-1000" style={{ width: `${Math.min(secondary.ownership || 0, 100)}%` }}></div>
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between font-label text-[10px] uppercase">
-                  <span>Others</span>
-                  <span>14%</span>
+                  <span>{differential.name}</span>
+                  <span>{differential.ownership > 0 ? differential.ownership.toFixed(1) : '—'}%</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-white/20 rounded-full transition-all duration-1000" style={{ width: '14%' }}></div>
+                  <div className="h-full bg-white/20 rounded-full transition-all duration-1000" style={{ width: `${Math.min(differential.ownership || 0, 100)}%` }}></div>
                 </div>
               </div>
             </div>
@@ -214,19 +217,19 @@ export default function CaptainTab() {
         {/* Stat Card 3 - Fixture Difficulty */}
         <div className="bg-surface-container-low border border-surface-container-high p-8 rounded-xl flex flex-col justify-between">
           <div>
-            <h4 className="font-headline text-lg font-bold text-on-surface mb-6">Fixture Odds</h4>
+            <h4 className="font-headline text-lg font-bold text-on-surface mb-6">Model odds</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg">
                 <span className="font-label text-xs uppercase text-on-surface">{primary.team} CS Odds</span>
-                <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">54%</span>
+                <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">{primary.xCS?.toFixed(0) || '—'}%</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg">
-                <span className="font-label text-xs uppercase text-on-surface">{secondary.team} Win Odds</span>
-                <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">78%</span>
+                <span className="font-label text-xs uppercase text-on-surface">{primary.name} goal odds</span>
+                <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">{primary.xG?.toFixed(0) || '—'}%</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg">
-                <span className="font-label text-xs uppercase text-on-surface">{differential.team} Goal Odds</span>
-                <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">66%</span>
+                <span className="font-label text-xs uppercase text-on-surface">{differential.name} goal odds</span>
+                <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">{differential.xG?.toFixed(0) || '—'}%</span>
               </div>
             </div>
           </div>

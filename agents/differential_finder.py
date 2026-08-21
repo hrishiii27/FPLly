@@ -54,6 +54,10 @@ class DifferentialFinder:
             prediction = self.predictor.predictions.get(player.id)
             if not prediction or prediction.expected_points < min_pts:
                 continue
+            if prediction.minutes_tag in ("Injured", "Suspended", "Minutes-Managed"):
+                continue
+            if ownership < 0.4:
+                continue
             
             diff = self._create_differential(player, prediction)
             self.differentials.append(diff)
@@ -67,8 +71,9 @@ class DifferentialFinder:
         ownership = max(player.selected_by_percent, 0.1)  # Avoid division by zero
         xpts = prediction.expected_points
         
-        # Differential score: xPts per % ownership
-        diff_score = xpts / ownership * 10  # Scale up
+        # xPts scaled by how under-owned they are — avoid 0.1% kids dominating
+        scarcity = max(0.5, min(8.0, 10.0 - ownership))
+        diff_score = xpts * scarcity
         
         # Value score
         value_score = xpts / player.price if player.price > 0 else 0

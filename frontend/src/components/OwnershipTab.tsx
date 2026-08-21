@@ -87,7 +87,10 @@ export default function OwnershipTab() {
                 key={i} 
                 className="flex items-center justify-between bg-surface-container-low border border-surface-container-highest rounded-lg p-4 group/item hover:border-primary/30 transition-colors"
               >
-                <div className="font-headline font-bold text-on-surface text-lg leading-none">{p.name}</div>
+                <div>
+                  <div className="font-headline font-bold text-on-surface text-lg leading-none">{p.name}</div>
+                  <div className="font-label text-[10px] uppercase tracking-widest text-outline mt-1">{p.team} {p.position ? `· ${p.position}` : ''}</div>
+                </div>
                 <div className="flex items-center gap-6 text-sm">
                   <div className="flex flex-col items-end">
                     <span className="font-label text-[9px] uppercase tracking-widest text-outline mb-1">Own.</span>
@@ -184,8 +187,9 @@ export default function OwnershipTab() {
                   <td className="px-6 py-4 text-on-surface font-bold">{p.xpts?.toFixed(1)}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
-                      p.risk === 'High' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                      p.risk === 'Extreme' ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' :
+                      p.risk === 'High' || p.risk === 'Extreme' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                      p.risk === 'Medium' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
+                      p.risk === 'Differential' ? 'bg-secondary/10 text-secondary border border-secondary/20' :
                       'bg-surface-container-highest text-outline border border-outline/20'
                     }`}>
                       {p.risk}

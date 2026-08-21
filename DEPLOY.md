@@ -1,143 +1,90 @@
-# 🚀 FPLly Deployment Guide
+# FPLly deployment
 
-## Architecture Overview
-FPLly has **two parts** that need to be deployed:
-1. **Backend (Flask)** - Python API server
-2. **Frontend (React)** - Vite/React static app
+Two processes: **Flask API** (`server.py`) and **Vite/React** (`frontend/`). Locally the UI proxies `/api` to port 5050. In production, either serve the built frontend from the same host or set the API origin on the static host.
 
----
-
-## Option 1: Railway (Recommended - Easiest)
-
-### Backend Deployment
-
-1. **Create Railway Account**: https://railway.app
-
-2. **Install Railway CLI**:
-   ```bash
-   npm install -g @railway/cli
-   railway login
-   ```
-
-3. **Create `Procfile`** in project root:
-   ```
-   web: python server.py
-   ```
-
-4. **Create `runtime.txt`**:
-   ```
-   python-3.11.0
-   ```
-
-5. **Deploy**:
-   ```bash
-   cd /Users/hrishikeshvirupakshi/Downloads/FPLly
-   railway init
-   railway up
-   ```
-
-6. **Get your URL**: `https://fplly-production.up.railway.app`
-
-### Frontend Deployment (Vercel)
-
-1. **Build Frontend**:
-   ```bash
-   cd frontend
-   npm run build
-   ```
-
-2. **Deploy to Vercel**:
-   ```bash
-   npm install -g vercel
-   vercel
-   ```
-
-3. **Set API URL**: Create `.env.production`:
-   ```
-   VITE_API_URL=https://your-railway-url.up.railway.app
-   ```
-
-4. **Update fetch calls** in frontend to use `import.meta.env.VITE_API_URL`
+`server.py` binds `0.0.0.0` and uses **`PORT`** if set (Railway/Render), otherwise **5050**. `debug=False` — you must restart the process after Python changes.
 
 ---
 
-## Option 2: Render (Free Tier Available)
+## Option 1: Railway (API) + Vercel (UI)
 
-### Backend on Render
+### API
 
-1. Go to https://render.com → New → Web Service
-2. Connect your GitHub repo
-3. Settings:
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `python server.py`
-   - **Environment**: Python 3
+1. Connect the GitHub repo to [Railway](https://railway.app).
+2. Root already has `Procfile` (`web: python server.py`) and `runtime.txt` (`python-3.11.0`).
+3. Build: `pip install -r requirements.txt`. Start: `python server.py`.
+4. EasyOCR and first ML train need disk + time; give the service enough memory (2 GB+ recommended) and a long first-request timeout.
+5. Note the public URL, e.g. `https://your-service.up.railway.app`.
 
-### Frontend on Render
+### UI
 
-1. New → Static Site
-2. **Build Command**: `cd frontend && npm install && npm run build`
-3. **Publish Directory**: `frontend/dist`
+```bash
+cd frontend
+npm install && npm run build
+```
+
+Deploy `frontend/` to Vercel. Create `.env.production`:
+
+```
+VITE_API_URL=https://your-service.up.railway.app
+```
+
+Wire fetches to `import.meta.env.VITE_API_URL` if you are not using the Vite proxy (production builds do not proxy). Allow that origin in Flask CORS if you restrict CORS later.
 
 ---
 
-## Option 3: Docker (For VPS/Cloud)
+## Option 2: Render
 
-### Create `Dockerfile` in project root:
+**Web service (API)**
+
+- Build: `pip install -r requirements.txt`
+- Start: `python server.py`
+- Python 3.11
+
+**Static site (UI)**
+
+- Build: `cd frontend && npm install && npm run build`
+- Publish: `frontend/dist`
+- Same `VITE_API_URL` as above.
+
+---
+
+## Option 3: Docker
 
 ```dockerfile
 FROM python:3.11-slim
-
 WORKDIR /app
-
-# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy app
 COPY . .
-
-# Build frontend
-RUN apt-get update && apt-get install -y nodejs npm
-RUN cd frontend && npm install && npm run build
-
+RUN apt-get update && apt-get install -y nodejs npm \
+    && cd frontend && npm install && npm run build
 EXPOSE 5050
-
 CMD ["python", "server.py"]
 ```
 
-### Build & Run:
 ```bash
 docker build -t fplly .
-docker run -p 5050:5050 fplly
+docker run -p 5050:5050 -e PORT=5050 fplly
 ```
 
----
-
-## Quick Checklist Before Deploy
-
-- [ ] Set `debug=False` in `server.py` for production
-- [ ] Add CORS origin for your frontend URL
-- [ ] Test locally with `npm run build` first
-- [ ] Ensure all dependencies are in `requirements.txt`
+Serving `frontend/dist` from Flask is not wired by default; use nginx or the Vite host, or add static routes if you want a single container.
 
 ---
 
-## Environment Variables (If Needed)
+## Checklist
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PORT` | Server port | `5050` |
-| `FLASK_ENV` | Environment | `production` |
+- [ ] `debug=False` (already the default in `server.py`)
+- [ ] CORS allows your frontend origin
+- [ ] `requirements.txt` installed (includes `joblib`, `easyocr`, `xgboost`)
+- [ ] First boot can download historical CSVs and EasyOCR weights
+- [ ] Do not commit `data/ml_ensemble.joblib` secrets; caches are rebuildable
 
 ---
 
-## Estimated Costs
+## Environment
 
-| Platform | Free Tier | Paid |
-|----------|-----------|------|
-| Railway | 500 hours/month | $5/mo |
-| Render | Static sites free, backend sleeps | $7/mo |
-| Vercel | Frontend free | - |
-| Heroku | No free tier | $5/mo |
-
-**Recommendation**: Use **Railway** (backend) + **Vercel** (frontend) for the best free experience!
+| Variable | Meaning | Default |
+|----------|---------|---------|
+| `PORT` | Flask listen port | `5050` |
+| `FLASK_ENV` | Optional Flask env | — |

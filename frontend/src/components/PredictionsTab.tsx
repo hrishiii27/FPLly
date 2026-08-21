@@ -11,6 +11,7 @@ function Spinner() {
 export default function PredictionsTab() {
   const [predictions, setPredictions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
   const [position, setPosition] = useState('')
   const [maxPrice, setMaxPrice] = useState('20')
 
@@ -18,7 +19,7 @@ export default function PredictionsTab() {
     async function fetchPredictions() {
       setLoading(true)
       try {
-        const params = new URLSearchParams({ limit: '50', max_price: maxPrice })
+        const params = new URLSearchParams({ limit: '100', max_price: maxPrice })
         if (position) params.append('position', position)
         
         const res = await fetch(`/api/predictions?${params}`)
@@ -73,6 +74,16 @@ export default function PredictionsTab() {
         </h3>
         
         <div className="flex flex-wrap gap-4 w-full md:w-auto">
+          <div className="flex-1 md:flex-none relative min-w-[180px]">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">search</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search player…"
+              className="w-full bg-surface-container-low border border-surface-container-high rounded-lg pl-10 pr-4 py-3 font-body text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
           <div className="flex-1 md:flex-none relative min-w-[160px]">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">sports_soccer</span>
             <select 
@@ -121,14 +132,19 @@ export default function PredictionsTab() {
                   <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Team</th>
                   <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Postn</th>
                   <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Price</th>
+                  <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Own %</th>
+                  <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Minutes</th>
                   <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Proj xPts</th>
-                  <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">95% CI Range</th>
+                  <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Fixture</th>
+                  <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Range</th>
                   <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Value (xPts/£)</th>
                   <th className="px-6 py-4 font-label text-[10px] uppercase tracking-widest">Momentum</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-container-high relative z-0">
-                {predictions.map((p) => (
+              {predictions
+                .filter((p) => !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.team?.toLowerCase().includes(search.toLowerCase()))
+                .map((p) => (
                   <tr 
                     key={p.id} 
                     className="hover:bg-surface-container-low transition-colors cursor-pointer group"
@@ -141,9 +157,12 @@ export default function PredictionsTab() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-outline">£{p.price.toFixed(1)}m</td>
+                    <td className="px-6 py-4 text-outline">{p.ownership != null ? `${p.ownership.toFixed(1)}%` : '—'}</td>
+                    <td className="px-6 py-4 text-[11px] text-outline">{p.minutes || '—'}</td>
                     <td className="px-6 py-4 font-bold text-primary group-hover:scale-110 origin-left transition-transform inline-block">
                         {p.xPts.toFixed(2)}
                     </td>
+                    <td className="px-6 py-4 text-[11px] text-outline max-w-[140px] truncate" title={p.fixture}>{p.fixture || '—'}</td>
                     <td className="px-6 py-4">
                         <span className="text-[10px] text-outline opacity-80">
                             [{p.xPts_low.toFixed(1)} - {p.xPts_high.toFixed(1)}]

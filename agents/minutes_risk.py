@@ -48,18 +48,17 @@ class MinutesRiskAgent:
         self.data = data_agent
         self.analyses: dict[int, MinutesAnalysis] = {}
         
-        # Games played so far this season (approximate)
-        self.games_played = max(self.data.current_gw - 1, 1)
+        # Games completed this season (0 at the GW1 deadline)
+        self.games_played = max(self.data.current_gw - 1, 0)
     
     def analyze_player(self, player: Player) -> MinutesAnalysis:
         """Analyze minutes risk for a player."""
         
-        # Calculate matches and starts
         matches_approx = player.minutes / 90 if player.minutes > 0 else 0
-        starts_approx = int(matches_approx * 0.9)  # Rough estimate
-        minutes_per_match = player.minutes / max(self.games_played, 1)
+        starts_approx = int(matches_approx * 0.9)
+        denom = max(self.games_played, 1)
+        minutes_per_match = player.minutes / denom if self.games_played else 0
         
-        # Determine expected minutes
         if player.status == "i":
             expected_minutes = 0
             tag = "Injured"
@@ -75,8 +74,18 @@ class MinutesRiskAgent:
         else:
             chance = player.chance_of_playing if player.chance_of_playing is not None else 100
             
-            # Calculate expected minutes based on historical average
-            if minutes_per_match >= 80:
+            if self.games_played == 0 and player.minutes == 0:
+                # Pre-season / GW1: no minutes yet — use price & ownership as a starter prior
+                if chance >= 75 and (player.selected_by_percent >= 8 or player.price >= 6.0):
+                    expected_minutes = 85
+                    tag = "Nailed"
+                elif chance >= 75 and player.price >= 4.5:
+                    expected_minutes = 70
+                    tag = "Nailed" if player.selected_by_percent >= 3 else "Rotation Risk"
+                else:
+                    expected_minutes = 45
+                    tag = "Rotation Risk"
+            elif minutes_per_match >= 80:
                 expected_minutes = 90
                 tag = "Nailed"
             elif minutes_per_match >= 60:
@@ -92,25 +101,24 @@ class MinutesRiskAgent:
                 expected_minutes = 20
                 tag = "Minutes-Managed"
             
-            # Adjust for chance of playing
             if chance < 100:
                 expected_minutes *= (chance / 100)
                 if chance <= 50:
-                    tag = "Injured" if "injury" in player.news.lower() else "Minutes-Managed"
+                    tag = "Injured" if "injury" in (player.news or "").lower() else "Minutes-Managed"
         
-        # Calculate range
         low = max(0, expected_minutes - 20)
         high = min(90, expected_minutes + 15)
         
-        # Confidence based on data availability
         if player.minutes >= 900:
             confidence = 90
         elif player.minutes >= 450:
             confidence = 70
         elif player.minutes >= 180:
             confidence = 50
+        elif self.games_played == 0 and tag == "Nailed":
+            confidence = 55
         else:
-            confidence = 30
+            confidence = 35
         
         analysis = MinutesAnalysis(
             player_id=player.id,

@@ -52,7 +52,7 @@ class OwnershipAnalyzer:
         results = []
         
         for player in self.data.players:
-            if player.status == "a" and player.minutes > 0:
+            if player.status == "a":
                 analysis = self._analyze_player(player)
                 self.analyses[player.id] = analysis
                 results.append(analysis)
@@ -71,10 +71,8 @@ class OwnershipAnalyzer:
         if self.predictor and player.id in self.predictor.predictions:
             xpts = self.predictor.predictions[player.id].expected_points
         
-        is_essential = ownership >= self.ESSENTIAL_THRESHOLD and xpts > 5.0
-        
-        # Calculate EO risk
-        eo_risk = self._calculate_eo_risk(ownership, xpts, is_essential)
+        is_essential = ownership >= 30.0 and xpts >= 4.5
+        eo_risk, _reason = self._calculate_eo_risk(ownership, xpts, is_essential)
         
         return OwnershipAnalysis(
             player_id=player.id,
@@ -90,16 +88,17 @@ class OwnershipAnalyzer:
             eo_risk=eo_risk
         )
     
-    def _calculate_eo_risk(self, ownership: float, xpts: float, is_essential: bool) -> str:
-        """Calculate risk of not owning a player."""
+    def _calculate_eo_risk(self, ownership: float, xpts: float, is_essential: bool) -> tuple[str, str]:
+        """Return (label for UI, long reason)."""
         if is_essential:
-            return "HIGH RISK - Essential player, big haul hurts rank"
-        elif ownership > 30 and xpts > 5:
-            return "MEDIUM RISK - Popular pick with good fixture"
-        elif ownership > 15:
-            return "LOW RISK - Template player"
-        else:
-            return "DIFFERENTIAL - Low EO, haul helps rank"
+            return "High", "Essential — missing a haul hurts rank"
+        if ownership > 30 and xpts >= 4.5:
+            return "Medium", "Popular pick with a usable fixture"
+        if ownership > 25 and xpts < 3.5:
+            return "High", "Template trap — owned more than the xPts justify"
+        if ownership > 15:
+            return "Low", "Template-adjacent"
+        return "Differential", "Low EO — a haul helps rank"
     
     def get_template_players(self, min_ownership: float = 25.0) -> list[OwnershipAnalysis]:
         """Get most owned template players."""
@@ -117,7 +116,7 @@ class OwnershipAnalyzer:
         """Get highly owned players underperforming - risky to own."""
         avoid = []
         for a in self.analyses.values():
-            if a.ownership > 20 and a.xpts < 3.0:
+            if a.ownership >= 18 and a.xpts < 3.8:
                 avoid.append(a)
         return sorted(avoid, key=lambda x: x.ownership, reverse=True)
     
@@ -175,6 +174,8 @@ class OwnershipAnalyzer:
                 {
                     "id": a.player_id,
                     "name": a.player_name,
+                    "team": a.team,
+                    "position": a.position,
                     "ownership": a.ownership,
                     "xpts": a.xpts,
                     "risk": a.eo_risk

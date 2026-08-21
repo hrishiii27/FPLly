@@ -12,7 +12,7 @@ export default defineConfig({
         target: 'http://127.0.0.1:5050',
         changeOrigin: true,
         secure: false,
-        timeout: 60000,
+        timeout: 180000,
         configure: (proxy) => {
           proxy.on('error', (err) => {
             console.log('proxy error', err);
