@@ -515,503 +515,242 @@ def api_player(player_id: int):
     })
 
 
-@app.route('/api/upload-team', methods=['POST'])
+
+def _row_from_prediction(pred, raw_text="", confidence=100, matched=True):
+    return {
+        "raw_text": raw_text or pred.player_name,
+        "name": pred.player_name,
+        "id": pred.player_id,
+        "matched": matched,
+        "confidence": confidence,
+        "position": pred.position,
+        "team": pred.team,
+        "price": pred.price,
+        "xPts": pred.expected_points,
+        "minutes_tag": pred.minutes_tag,
+        "gw_label": getattr(pred, "gw_label", None),
+        "fixture": getattr(pred, "fixture_info", "No info"),
+    }
+
+
+def build_squad_analysis(player_ids, free_transfers=1, bank=None, extra_rows=None):
+    """Transfers, Best XI, chips from a list of FPL player ids."""
+    prediction_agent = agents["predictions"]
+    optimizer = agents["optimizer"]
+    seen = []
+    detected_list = []
+    total_team_value = 0.0
+    for pid in player_ids:
+        if pid in seen:
+            continue
+        pred = prediction_agent.predictions.get(pid)
+        if not pred:
+            continue
+        seen.append(pid)
+        total_team_value += pred.price
+        detected_list.append(_row_from_prediction(pred))
+    if extra_rows:
+        for row in extra_rows:
+            if not row.get("matched"):
+                detected_list.append(row)
+
+    free_transfers = max(1, min(5, int(free_transfers)))
+    if bank is None:
+        bank = max(0.0, 100.0 - total_team_value)
+    bank = max(0.0, round(float(bank), 1))
+
+    transfers, hit_advice, best_xi, note = [], None, None, None
+    if len(seen) < 11:
+        note = f"Matched {len(seen)}/15 players. Need at least 11 nailed names for transfers and Best XI."
+        hit_advice = {
+            "should_take_hit": False,
+            "best_hit_transfer": None,
+            "total_hit_gain": 0,
+            "explanation": note,
+        }
+    else:
+        transfer_recs = optimizer.suggest_transfers(seen, 5, bank)
+        used_out, used_in, unique = set(), set(), []
+        for t in transfer_recs:
+            if t.player_out_id in used_out or t.player_in_id in used_in:
+                continue
+            unique.append(t)
+            used_out.add(t.player_out_id)
+            used_in.add(t.player_in_id)
+        transfer_analysis = []
+        for i, t in enumerate(unique[:6]):
+            is_free = (i + 1) <= free_transfers
+            hit_cost = 0 if is_free else 4
+            net_gain = t.points_gain_next_5 - hit_cost
+            transfer_analysis.append({
+                "out": {"id": t.player_out_id, "name": t.player_out_name, "team": t.player_out_team, "price": t.player_out_price, "xPts": round(t.player_out_xpts, 2)},
+                "in": {"id": t.player_in_id, "name": t.player_in_name, "team": t.player_in_team, "price": t.player_in_price, "xPts": round(t.player_in_xpts, 2)},
+                "points_gain": round(t.points_gain_next_5, 2),
+                "price_change": t.price_change,
+                "is_free": is_free,
+                "hit_cost": hit_cost,
+                "net_gain": round(net_gain, 2),
+                "price_feasible": t.price_change <= bank,
+                "recommended": net_gain > 0.5 and t.price_change <= bank,
+                "reason": t.reason,
+            })
+        transfers = transfer_analysis
+        free_gains = sum(t["points_gain"] for t in transfer_analysis[:free_transfers])
+        potential_hits = [t for t in transfer_analysis[free_transfers:] if t["net_gain"] > 0 and t["price_feasible"]]
+        if potential_hits:
+            best_hit = potential_hits[0]
+            hit_advice = {
+                "should_take_hit": best_hit["net_gain"] > 1.5,
+                "best_hit_transfer": best_hit,
+                "total_hit_gain": round(sum(t["net_gain"] for t in potential_hits), 2),
+                "explanation": f"{'Take a -4' if best_hit['net_gain'] > 1.5 else 'Marginal hit'} for {best_hit['in']['name']} (nailed in, +{best_hit['net_gain']:.1f} net over 5 GWs).",
+            }
+        elif free_gains > 2:
+            hit_advice = {"should_take_hit": False, "best_hit_transfer": None, "total_hit_gain": 0,
+                          "explanation": f"Use {free_transfers} free transfer(s) for +{free_gains:.1f} pts. Only nailed starters are listed."}
+        else:
+            hit_advice = {"should_take_hit": False, "best_hit_transfer": None, "total_hit_gain": 0,
+                          "explanation": "Squad looks stable among startable players. Roll if the listed gains are small."}
+
+        preds = [prediction_agent.predictions[i] for i in seen if i in prediction_agent.predictions]
+        xi = optimizer._select_starting_xi(preds)
+        if len(xi) >= 11:
+            attackers = [p for p in xi if p.position in ("MID", "FWD") and optimizer._is_starter(p)]
+            cap_pool = attackers or xi
+            captain = max(cap_pool, key=lambda x: (optimizer._start_score(x), x.expected_points))
+            vice_pool = [p for p in xi if p.player_id != captain.player_id]
+            vice = max(vice_pool, key=lambda x: (optimizer._start_score(x), x.expected_points)) if vice_pool else None
+            counts = {"DEF": 0, "MID": 0, "FWD": 0}
+            for p in xi:
+                if p.position in counts:
+                    counts[p.position] += 1
+            xi.sort(key=lambda x: ["GKP", "DEF", "MID", "FWD"].index(x.position))
+            best_xi = {
+                "formation": f"{counts['DEF']}-{counts['MID']}-{counts['FWD']}",
+                "total_xpts": round(sum(p.expected_points for p in xi) + captain.expected_points, 2),
+                "captain": captain.player_name,
+                "vice_captain": vice.player_name if vice else None,
+                "players": [{
+                    "id": p.player_id, "name": p.player_name, "position": p.position, "team": p.team,
+                    "price": p.price, "xPts": round(p.expected_points, 2),
+                    "minutes_tag": p.minutes_tag,
+                    "is_captain": p.player_id == captain.player_id,
+                    "is_vice": vice is not None and p.player_id == vice.player_id,
+                } for p in xi],
+            }
+
+    chip_suggestions = []
+    if len(seen) >= 11:
+        if "chips" not in agents:
+            agents["chips"] = ChipAdvisor(agents["data"])
+        if not agents["chips"].gw_analyses:
+            agents["chips"].analyze_gameweeks(4)
+        xi_ids = [p["id"] for p in best_xi["players"]] if best_xi else []
+        chip_suggestions = agents["chips"].evaluate_chips_for_squad(seen, xi_ids, prediction_agent)
+
+    return {
+        "gw": agents["data"].next_gw,
+        "detected_count": len(detected_list),
+        "matched_count": len(seen),
+        "unmatched": [r.get("raw_text") for r in detected_list if not r.get("matched")],
+        "note": note,
+        "detected_players": detected_list,
+        "free_transfers": free_transfers,
+        "bank": bank,
+        "team_value": round(total_team_value, 1),
+        "transfers": transfers,
+        "hit_advice": hit_advice,
+        "best_xi": best_xi,
+        "chip_suggestions": chip_suggestions,
+    }
+
+
+@app.route("/api/players")
+def api_players_search():
+    """Search live FPL players to correct OCR mismatches."""
+    q = (request.args.get("q") or "").strip()
+    if "vision" not in agents:
+        agents["vision"] = TeamVisionAgent(agents["data"])
+    found = agents["vision"].search_players(q)
+    pred = agents.get("predictions")
+    out = []
+    for p in found:
+        xp = pred.predictions.get(p.id) if pred else None
+        out.append({
+            "id": p.id,
+            "name": p.web_name,
+            "full_name": f"{p.first_name} {p.second_name}".strip(),
+            "team": p.team_name,
+            "position": p.position,
+            "price": p.price,
+            "xPts": xp.expected_points if xp else None,
+            "minutes_tag": xp.minutes_tag if xp else None,
+        })
+    return jsonify(out)
+
+
+@app.route("/api/upload-team", methods=["POST"])
 def api_upload_team():
-    """Analyze an uploaded squad screenshot and/or a pasted name list."""
+    """Screenshot, pasted names, or edited player_ids -> squad analysis."""
     try:
-        if 'vision' not in agents:
-            agents['vision'] = TeamVisionAgent(agents['data'])
-        vision_agent = agents['vision']
-        prediction_agent = agents.get('predictions')
-        optimizer = agents.get('optimizer')
-        if not prediction_agent or not optimizer:
+        if "vision" not in agents:
+            agents["vision"] = TeamVisionAgent(agents["data"])
+        vision_agent = agents["vision"]
+        if not agents.get("predictions") or not agents.get("optimizer"):
             return jsonify({"error": "Predictions not ready yet"}), 503
 
-        names_raw = (request.form.get('names') or '').strip()
-        image_file = request.files.get('image')
-        detected = []
+        payload = request.get_json(silent=True) or {}
+        ids_raw = request.form.get("player_ids") or payload.get("player_ids")
+        player_ids = []
+        if ids_raw:
+            if isinstance(ids_raw, str):
+                player_ids = [int(x) for x in re.findall(r"\d+", ids_raw)]
+            elif isinstance(ids_raw, list):
+                player_ids = [int(x) for x in ids_raw]
 
-        if image_file and image_file.filename:
-            image_data = image_file.read()
-            if image_data:
-                detected = vision_agent.detect_team(image_data)
+        names_raw = (request.form.get("names") or payload.get("names") or "").strip()
+        image_file = request.files.get("image")
+        extra_rows = []
 
-        if names_raw:
-            parts = [p.strip() for p in re.split(r'[\n,;|/]+', names_raw) if p.strip()]
-            from_names = vision_agent.match_name_list(parts)
-            seen = {d.player_id for d in detected if d.matched}
-            for d in from_names:
-                if d.matched and d.player_id not in seen:
-                    detected.append(d)
-                    seen.add(d.player_id)
-                elif not d.matched:
-                    detected.append(d)
-
-        if not detected:
-            if not image_file and not names_raw:
+        if not player_ids:
+            detected = []
+            if image_file and image_file.filename:
+                image_data = image_file.read()
+                if image_data:
+                    detected = vision_agent.detect_team(image_data)
+            if names_raw:
+                parts = [p.strip() for p in re.split(r"[\n,;|/]+", names_raw) if p.strip()]
+                from_names = vision_agent.match_name_list(parts)
+                seen = {d.player_id for d in detected if d.matched}
+                for d in from_names:
+                    if d.matched and d.player_id not in seen:
+                        detected.append(d)
+                        seen.add(d.player_id)
+                    elif not d.matched:
+                        detected.append(d)
+            if not detected:
                 return jsonify({
-                    "error": "Upload a squad screenshot or paste player names (comma or newline separated)."
-                }), 400
-            return jsonify({
-                "error": "Could not read any players. Paste names as a fallback, or try a sharper crop of the pitch.",
-                "detected_players": [],
-                "matched_count": 0,
-                "detected_count": 0,
-            }), 200
+                    "error": "Upload a screenshot, paste names, or send player_ids.",
+                    "detected_players": [],
+                    "matched_count": 0,
+                    "detected_count": 0,
+                }), 400 if not image_file and not names_raw else 200
+            player_ids = [d.player_id for d in detected if d.matched]
+            extra_rows = [{
+                "raw_text": d.raw_text, "name": d.raw_text, "id": 0, "matched": False,
+                "confidence": d.confidence, "position": "", "team": "", "price": 0,
+                "xPts": 0, "minutes_tag": None, "fixture": "",
+            } for d in detected if not d.matched]
 
-        detected_ids = []
-        detected_list = []
-        total_team_value = 0.0
-        unmatched = []
-
-        for d in detected:
-            pred = None
-            if d.matched and d.player_id in prediction_agent.predictions:
-                pred = prediction_agent.predictions[d.player_id]
-                d.expected_points = pred.expected_points
-                if d.player_id not in detected_ids:
-                    detected_ids.append(d.player_id)
-                    total_team_value += d.price
-            row = {
-                "raw_text": d.raw_text,
-                "name": d.matched_name if d.matched else d.raw_text,
-                "id": d.player_id,
-                "matched": d.matched,
-                "confidence": d.confidence,
-                "position": d.position,
-                "team": d.team,
-                "price": d.price,
-                "xPts": d.expected_points,
-                "gw_label": getattr(pred, 'gw_label', None) if pred else None,
-                "fixture": getattr(pred, 'fixture_info', 'No info') if pred else "No info",
-            }
-            detected_list.append(row)
-            if not d.matched:
-                unmatched.append(d.raw_text)
-
-        free_transfers = int(request.form.get('free_transfers', 1))
-        free_transfers = max(1, min(5, free_transfers))
+        free_transfers = request.form.get("free_transfers") or payload.get("free_transfers") or 1
+        bank_in = request.form.get("bank") if request.form.get("bank") not in (None, "") else payload.get("bank")
         try:
-            bank_in = request.form.get('bank')
-            bank = float(bank_in) if bank_in not in (None, '') else max(0.0, 100.0 - total_team_value)
+            bank = float(bank_in) if bank_in not in (None, "") else None
         except (TypeError, ValueError):
-            bank = max(0.0, 100.0 - total_team_value)
-        bank = max(0.0, round(bank, 1))
+            bank = None
 
-        transfers = []
-        hit_advice = None
-        best_xi = None
-        note = None
-
-        if len(detected_ids) < 11:
-            note = f"Matched {len(detected_ids)}/15 players. Need at least 11 for transfers and Best XI — paste missing names below."
-            hit_advice = {
-                "should_take_hit": False,
-                "best_hit_transfer": None,
-                "total_hit_gain": 0,
-                "explanation": note,
-            }
-        else:
-            transfer_recs = optimizer.suggest_transfers(detected_ids, 5, bank + 3.0)
-            used_out_ids = set()
-            used_in_ids = set()
-            unique_transfers = []
-            for t in transfer_recs:
-                if t.player_out_id in used_out_ids or t.player_in_id in used_in_ids:
-                    continue
-                unique_transfers.append(t)
-                used_out_ids.add(t.player_out_id)
-                used_in_ids.add(t.player_in_id)
-
-            transfer_analysis = []
-            for i, t in enumerate(unique_transfers[:6]):
-                transfer_num = i + 1
-                is_free = transfer_num <= free_transfers
-                hit_cost = 0 if is_free else 4
-                net_gain = t.points_gain_next_5 - hit_cost
-                transfer_analysis.append({
-                    "out": {
-                        "id": t.player_out_id,
-                        "name": t.player_out_name,
-                        "team": t.player_out_team,
-                        "price": t.player_out_price,
-                        "xPts": round(t.player_out_xpts, 2),
-                    },
-                    "in": {
-                        "id": t.player_in_id,
-                        "name": t.player_in_name,
-                        "team": t.player_in_team,
-                        "price": t.player_in_price,
-                        "xPts": round(t.player_in_xpts, 2),
-                    },
-                    "points_gain": round(t.points_gain_next_5, 2),
-                    "price_change": t.price_change,
-                    "is_free": is_free,
-                    "hit_cost": hit_cost,
-                    "net_gain": round(net_gain, 2),
-                    "price_feasible": t.price_change <= bank,
-                    "recommended": net_gain > 0.5 and t.price_change <= bank,
-                })
-            transfers = transfer_analysis
-            free_gains = sum(t["points_gain"] for t in transfer_analysis[:free_transfers])
-            potential_hits = [t for t in transfer_analysis[free_transfers:] if t["net_gain"] > 0 and t["price_feasible"]]
-            if potential_hits:
-                best_hit = potential_hits[0]
-                hit_advice = {
-                    "should_take_hit": best_hit["net_gain"] > 1.0,
-                    "best_hit_transfer": best_hit,
-                    "total_hit_gain": round(sum(t["net_gain"] for t in potential_hits), 2),
-                    "explanation": "",
-                }
-                if best_hit["net_gain"] > 2.5:
-                    hit_advice["explanation"] = (
-                        f"Take a -4 for {best_hit['in']['name']}: net +{best_hit['net_gain']:.1f} pts over 5 GWs."
-                    )
-                elif best_hit["net_gain"] > 1.5:
-                    hit_advice["explanation"] = (
-                        f"Hit is worth considering for {best_hit['in']['name']} (+{best_hit['net_gain']:.1f} net)."
-                    )
-                else:
-                    hit_advice["explanation"] = (
-                        f"Marginal hit for {best_hit['in']['name']} (+{best_hit['net_gain']:.1f} net)."
-                    )
-            elif free_gains > 2:
-                hit_advice = {
-                    "should_take_hit": False,
-                    "best_hit_transfer": None,
-                    "total_hit_gain": 0,
-                    "explanation": f"Use your {free_transfers} free transfer(s) for +{free_gains:.1f} pts. No hit needed.",
-                }
-            else:
-                hit_advice = {
-                    "should_take_hit": False,
-                    "best_hit_transfer": None,
-                    "total_hit_gain": 0,
-                    "explanation": "Squad looks stable. Roll the transfer if the listed gains are small.",
-                }
-
-            matched_players = [d for d in detected if d.matched and d.player_id in prediction_agent.predictions]
-            if len(matched_players) >= 11:
-                by_pos = {"GKP": [], "DEF": [], "MID": [], "FWD": []}
-                for d in matched_players:
-                    if d.position in by_pos:
-                        by_pos[d.position].append(d)
-                for pos in by_pos:
-                    by_pos[pos].sort(key=lambda x: x.expected_points, reverse=True)
-                xi_players = []
-                if by_pos["GKP"]:
-                    xi_players.append(by_pos["GKP"][0])
-                xi_players.extend(by_pos["DEF"][:3])
-                xi_players.extend(by_pos["MID"][:2])
-                xi_players.extend(by_pos["FWD"][:1])
-                remaining = by_pos["DEF"][3:] + by_pos["MID"][2:] + by_pos["FWD"][1:]
-                remaining.sort(key=lambda x: x.expected_points, reverse=True)
-                for p in remaining:
-                    if len(xi_players) >= 11:
-                        break
-                    xi_players.append(p)
-                xi_players = xi_players[:11]
-                xi_players.sort(key=lambda x: ["GKP", "DEF", "MID", "FWD"].index(x.position))
-                captain = max(xi_players, key=lambda x: x.expected_points)
-                vice_pool = [p for p in xi_players if p.player_id != captain.player_id]
-                vice = max(vice_pool, key=lambda x: x.expected_points) if vice_pool else None
-                counts = {"DEF": 0, "MID": 0, "FWD": 0}
-                for p in xi_players:
-                    if p.position in counts:
-                        counts[p.position] += 1
-                total_xi_xpts = sum(p.expected_points for p in xi_players) + captain.expected_points
-                best_xi = {
-                    "formation": f"{counts['DEF']}-{counts['MID']}-{counts['FWD']}",
-                    "total_xpts": round(total_xi_xpts, 2),
-                    "captain": captain.matched_name,
-                    "vice_captain": vice.matched_name if vice else None,
-                    "players": [
-                        {
-                            "id": p.player_id,
-                            "name": p.matched_name,
-                            "position": p.position,
-                            "team": p.team,
-                            "price": p.price,
-                            "xPts": round(p.expected_points, 2),
-                            "is_captain": p.player_id == captain.player_id,
-                            "is_vice": vice is not None and p.player_id == vice.player_id,
-                        }
-                        for p in xi_players
-                    ],
-                }
-
-        chip_suggestions = []
-        if len(detected_ids) >= 11:
-            if 'chips' not in agents:
-                agents['chips'] = ChipAdvisor(agents['data'])
-            if not getattr(agents['chips'], 'gw_analyses', None):
-                agents['chips'].analyze_gameweeks(4)
-            xi_ids = [p["id"] for p in best_xi["players"]] if best_xi else []
-            chip_suggestions = agents['chips'].evaluate_chips_for_squad(detected_ids, xi_ids, prediction_agent)
-
-        return jsonify({
-            "gw": agents['data'].next_gw,
-            "detected_count": len(detected),
-            "matched_count": len(detected_ids),
-            "unmatched": unmatched,
-            "note": note,
-            "detected_players": detected_list,
-            "free_transfers": free_transfers,
-            "bank": bank,
-            "team_value": round(total_team_value, 1),
-            "transfers": transfers,
-            "hit_advice": hit_advice,
-            "best_xi": best_xi,
-            "chip_suggestions": chip_suggestions,
-        })
-    except Exception as e:
-        print(f"Upload error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-    
-    try:
-        # Read image data
-        image_data = image_file.read()
-        
-        # Initialize vision agent if needed
-        if 'vision' not in agents:
-            agents['vision'] = TeamVisionAgent(agents['data'])
-        
-        vision_agent = agents['vision']
-        prediction_agent = agents.get('predictions')
-        optimizer = agents.get('optimizer')
-        
-        # Detect players from image
-        detected = vision_agent.detect_team(image_data)
-        
-        # Get predictions for detected players
-        detected_ids = []
-        detected_list = []
-        total_team_value = 0
-        
-        for d in detected:
-            pred = None
-            if d.matched and d.player_id in prediction_agent.predictions:
-                pred = prediction_agent.predictions[d.player_id]
-                d.expected_points = pred.expected_points
-                detected_ids.append(d.player_id)
-                total_team_value += d.price
-            
-            detected_list.append({
-                "raw_text": d.raw_text,
-                "name": d.matched_name if d.matched else d.raw_text,
-                "id": d.player_id,
-                "matched": d.matched,
-                "confidence": d.confidence,
-                "position": d.position,
-                "team": d.team,
-                "price": d.price,
-                "xPts": d.expected_points,
-                "gw_label": getattr(pred, 'gw_label', None) if pred else None,
-                "fixture": getattr(pred, 'fixture_info', 'No info') if pred else "No info"
-            })
-        
-        # Get free transfers from request (default 1)
-        free_transfers = int(request.form.get('free_transfers', 1))
-        free_transfers = max(1, min(5, free_transfers))  # Cap between 1-5
-        
-        # Get bank value (estimate based on 100m budget)
-        bank = max(0, 100.0 - total_team_value)
-        
-        # Get transfer recommendations if we have a squad
-        transfers = []
-        hit_advice = None
-        best_xi = None
-        
-        if len(detected_ids) >= 11:
-            # Get more transfer options with higher budget tolerance
-            transfer_recs = optimizer.suggest_transfers(detected_ids, 5, bank + 3.0)
-            
-            # DEDUPLICATION: track players already used in transfers
-            used_out_ids = set()
-            used_in_ids = set()
-            unique_transfers = []
-            
-            for t in transfer_recs:
-                # Skip if we've already suggested transferring this player out
-                if t.player_out_id in used_out_ids:
-                    continue
-                # Skip if we've already suggested this player in
-                if t.player_in_id in used_in_ids:
-                    continue
-                
-                unique_transfers.append(t)
-                used_out_ids.add(t.player_out_id)
-                used_in_ids.add(t.player_in_id)
-            
-            # Analyze transfers with hit costs
-            transfer_analysis = []
-            for i, t in enumerate(unique_transfers[:6]):
-                transfer_num = i + 1
-                is_free = transfer_num <= free_transfers
-                hit_cost = 0 if is_free else 4
-                net_gain = t.points_gain_next_5 - hit_cost
-                price_feasible = t.price_change <= bank
-                
-                transfer_analysis.append({
-                    "out": {
-                        "id": t.player_out_id,
-                        "name": t.player_out_name,
-                        "team": t.player_out_team,
-                        "price": t.player_out_price,
-                        "xPts": round(t.player_out_xpts, 2)
-                    },
-                    "in": {
-                        "id": t.player_in_id,
-                        "name": t.player_in_name,
-                        "team": t.player_in_team,
-                        "price": t.player_in_price,
-                        "xPts": round(t.player_in_xpts, 2)
-                    },
-                    "points_gain": round(t.points_gain_next_5, 2),
-                    "price_change": t.price_change,
-                    "is_free": is_free,
-                    "hit_cost": hit_cost,
-                    "net_gain": round(net_gain, 2),
-                    "price_feasible": price_feasible,
-                    "recommended": net_gain > 0.5 and price_feasible
-                })
-            
-            # Show all analyzed transfers (both free and hit)
-            transfers = transfer_analysis
-            
-            # Better hit advice based on actual analysis (Using 5GW horizon)
-            free_gains = sum(t["points_gain"] for t in transfer_analysis[:free_transfers])
-            
-            # Find hits that are actually worth it (net_gain > 0 means gain exceeds -4 cost)
-            potential_hits = [t for t in transfer_analysis[free_transfers:] 
-                             if t["net_gain"] > 0 and t["price_feasible"]]
-            
-            if potential_hits:
-                best_hit = potential_hits[0]
-                total_hit_gain = sum(t["net_gain"] for t in potential_hits)
-                
-                hit_advice = {
-                    "should_take_hit": best_hit["net_gain"] > 1.0,
-                    "best_hit_transfer": best_hit,
-                    "total_hit_gain": round(total_hit_gain, 2),
-                    "explanation": ""
-                }
-                
-                if best_hit["net_gain"] > 2.5:
-                    hit_advice["explanation"] = f"✅ STRONGLY RECOMMEND: Take a -4 hit for {best_hit['in']['name']}. Net gain of +{best_hit['net_gain']:.1f} pts is excellent!"
-                elif best_hit["net_gain"] > 1.5:
-                    hit_advice["explanation"] = f"✅ WORTH IT: Consider a hit for {best_hit['in']['name']} (+{best_hit['net_gain']:.1f} net). Good upgrade!"
-                elif best_hit["net_gain"] > 0:
-                    hit_advice["explanation"] = f"⚠️ MARGINAL: Hit for {best_hit['in']['name']} only gains +{best_hit['net_gain']:.1f} net. Proceed with caution."
-            else:
-                # Check if free transfers are good
-                if free_gains > 2:
-                    hit_advice = {
-                        "should_take_hit": False,
-                        "best_hit_transfer": None,
-                        "total_hit_gain": 0,
-                        "explanation": f"✅ Use your {free_transfers} free transfer(s) for +{free_gains:.1f} pts gain. No hits needed!"
-                    }
-                else:
-                    hit_advice = {
-                        "should_take_hit": False,
-                        "best_hit_transfer": None,
-                        "total_hit_gain": 0,
-                        "explanation": "💡 Your team looks solid. Consider rolling the transfer if gains are small."
-                    }
-            
-            # Generate Best XI from detected players
-            matched_players = [d for d in detected if d.matched and d.player_id in prediction_agent.predictions]
-            
-            if len(matched_players) >= 11:
-                # Sort by xPts within each position
-                by_pos = {"GKP": [], "DEF": [], "MID": [], "FWD": []}
-                for d in matched_players:
-                    by_pos[d.position].append(d)
-                    
-                for pos in by_pos:
-                    by_pos[pos].sort(key=lambda x: x.expected_points, reverse=True)
-                
-                # Build best XI: 1 GKP, 3+ DEF, 2+ MID, 1+ FWD = 7 minimum, fill 4 more
-                xi_players = []
-                if by_pos["GKP"]:
-                    xi_players.append(by_pos["GKP"][0])
-                xi_players.extend(by_pos["DEF"][:3])  # Min 3 DEF
-                xi_players.extend(by_pos["MID"][:2])  # Min 2 MID
-                xi_players.extend(by_pos["FWD"][:1])  # Min 1 FWD
-                
-                # Fill remaining slots with highest xPts
-                remaining = (by_pos["DEF"][3:] + by_pos["MID"][2:] + by_pos["FWD"][1:])
-                remaining.sort(key=lambda x: x.expected_points, reverse=True)
-                
-                for p in remaining:
-                    if len(xi_players) >= 11:
-                        break
-                    xi_players.append(p)
-                
-                xi_players = xi_players[:11]
-                xi_players.sort(key=lambda x: ["GKP", "DEF", "MID", "FWD"].index(x.position))
-                
-                # Captain = highest xPts
-                captain = max(xi_players, key=lambda x: x.expected_points)
-                vice = max([p for p in xi_players if p != captain], key=lambda x: x.expected_points) if len(xi_players) > 1 else None
-                
-                # Formation
-                counts = {"DEF": 0, "MID": 0, "FWD": 0}
-                for p in xi_players:
-                    if p.position in counts:
-                        counts[p.position] += 1
-                formation = f"{counts['DEF']}-{counts['MID']}-{counts['FWD']}"
-                
-                total_xi_xpts = sum(p.expected_points for p in xi_players) + captain.expected_points  # Captain doubles
-                
-                best_xi = {
-                    "formation": formation,
-                    "total_xpts": round(total_xi_xpts, 2),
-                    "captain": captain.matched_name,
-                    "vice_captain": vice.matched_name if vice else None,
-                    "players": [
-                        {
-                            "id": p.player_id,
-                            "name": p.matched_name,
-                            "position": p.position,
-                            "team": p.team,
-                            "price": p.price,
-                            "xPts": round(p.expected_points, 2),
-                            "is_captain": p == captain,
-                            "is_vice": p == vice
-                        }
-                        for p in xi_players
-                    ]
-                }
-        
-        # Chip suggestions
-        chip_suggestions = []
-        
-        if len(detected_ids) >= 11:
-            if 'chips' not in agents:
-                agents['chips'] = ChipAdvisor(agents['data'])
-                agents['chips'].analyze_gameweeks(4)
-                
-            xi_ids = [p["id"] for p in best_xi["players"]] if best_xi else []
-            chip_suggestions = agents['chips'].evaluate_chips_for_squad(detected_ids, xi_ids, prediction_agent)
-        
-        return jsonify({
-            "gw": agents['data'].next_gw,
-            "detected_count": len(detected),
-            "matched_count": len(detected_ids),
-            "detected_players": detected_list,
-            "free_transfers": free_transfers,
-            "bank": round(bank, 1),
-            "team_value": round(total_team_value, 1),
-            "transfers": transfers,
-            "hit_advice": hit_advice,
-            "best_xi": best_xi,
-            "chip_suggestions": chip_suggestions
-        })
-        
+        result = build_squad_analysis(player_ids, free_transfers, bank, extra_rows)
+        return jsonify(result)
     except Exception as e:
         print(f"Upload error: {e}")
         import traceback

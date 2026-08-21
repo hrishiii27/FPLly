@@ -60,7 +60,37 @@ class SquadOptimizer:
     def __init__(self, prediction_agent: PointsPredictionAgent):
         self.predictions = prediction_agent
         self.data = prediction_agent.data
-    
+
+    def _ownership(self, p: PointsPrediction) -> float:
+        pl = next((x for x in self.data.players if x.id == p.player_id), None)
+        return pl.selected_by_percent if pl else 0.0
+
+    def _start_score(self, p: PointsPrediction) -> float:
+        """xPts first; mild minutes/ownership so premiums beat random 6.0s."""
+        tag = (p.minutes_tag or "").lower()
+        if tag in ("injured", "suspended") or p.gw_multiplier <= 0:
+            return 0.0
+        weight = {
+            "nailed": 1.0,
+            "rotation risk": 0.88,
+            "minutes-managed": 0.62,
+            "unknown": 0.9,
+        }.get(tag, 0.85)
+        return p.expected_points * weight + 0.015 * self._ownership(p)
+
+    def _is_starter(self, p: PointsPrediction, allow_rotation: bool = False) -> bool:
+        if p.gw_multiplier <= 0 or p.expected_points <= 0:
+            return False
+        tag = p.minutes_tag
+        if tag in ("Injured", "Suspended"):
+            return False
+        if tag == "Nailed" or tag in ("unknown", "Unknown"):
+            return True
+        if tag == "Rotation Risk":
+            return True if allow_rotation or self._ownership(p) >= 8 else allow_rotation
+        # Minutes-Managed: still allow template / premium names
+        return allow_rotation or self._ownership(p) >= 10 or p.price >= 8.0
+
     def _min_fill_cost(self, position_counts: dict) -> float:
         return sum(
             max(0, self.POSITION_LIMITS[pos] - position_counts[pos]) * self.MIN_COST[pos]
@@ -81,34 +111,35 @@ class SquadOptimizer:
         return True
     
     def optimize_team(self, budget: float = 100.0) -> OptimizedSquad:
-        """Build a valid 15-man squad, picking highest xPts while reserving bench budget."""
-        
-        all_preds = [
-            p for p in self.predictions.predictions.values()
-            if p.gw_multiplier > 0
-            and p.minutes_tag not in ("Injured", "Suspended")
-            and p.expected_points > 0
-        ]
-        
+        """Build a 15: nailed starters first, cheap nailed enablers last — never injured fillers."""
+        nailed = [p for p in self.predictions.predictions.values() if self._is_starter(p)]
+        rotation = [p for p in self.predictions.predictions.values() if self._is_starter(p, allow_rotation=True)]
+
         selected = []
         selected_ids = set()
         team_counts = {}
         position_counts = {"GKP": 0, "DEF": 0, "MID": 0, "FWD": 0}
         total_cost = 0.0
-        
-        ranked = sorted(all_preds, key=lambda x: (x.expected_points, -x.price), reverse=True)
-        for p in ranked:
-            if len(selected) >= self.SQUAD_SIZE:
-                break
-            if self._can_add(p, selected_ids, team_counts, position_counts, total_cost, budget):
-                selected.append(p)
-                selected_ids.add(p.player_id)
-                position_counts[p.position] += 1
-                team_counts[p.team] = team_counts.get(p.team, 0) + 1
-                total_cost += p.price
-        
+
+        def try_add(pool, key):
+            nonlocal total_cost
+            for p in sorted(pool, key=key, reverse=True):
+                if len(selected) >= self.SQUAD_SIZE:
+                    return
+                if self._can_add(p, selected_ids, team_counts, position_counts, total_cost, budget):
+                    selected.append(p)
+                    selected_ids.add(p.player_id)
+                    position_counts[p.position] += 1
+                    team_counts[p.team] = team_counts.get(p.team, 0) + 1
+                    total_cost += p.price
+
+        # 1) Highest xPts among startable players (Haaland/Bruno before cheap CS bait)
+        try_add(nailed, lambda x: (self._start_score(x), x.expected_points))
+        # 2) Fill remaining slots with the cheapest startable enablers (not 0%-owned kids)
         if len(selected) < self.SQUAD_SIZE:
-            for p in sorted(all_preds, key=lambda x: x.price):
+            leftovers = [p for p in rotation if p.player_id not in selected_ids]
+            leftovers = [p for p in leftovers if self._ownership(p) >= 0.5 or p.price <= 5.0]
+            for p in sorted(leftovers, key=lambda x: (x.price, -self._start_score(x))):
                 if len(selected) >= self.SQUAD_SIZE:
                     break
                 if self._can_add(p, selected_ids, team_counts, position_counts, total_cost, budget):
@@ -117,6 +148,8 @@ class SquadOptimizer:
                     position_counts[p.position] += 1
                     team_counts[p.team] = team_counts.get(p.team, 0) + 1
                     total_cost += p.price
+        if len(selected) < self.SQUAD_SIZE:
+            try_add(rotation, lambda x: (self._start_score(x), x.expected_points))
         
         starting = self._select_starting_xi(selected)
         bench = [p for p in selected if p.player_id not in {s.player_id for s in starting}]
@@ -126,9 +159,11 @@ class SquadOptimizer:
             starting = selected[:11]
             bench = selected[11:]
         
-        captain = max(starting, key=lambda x: x.expected_points)
+        attackers = [p for p in starting if p.position in ("MID", "FWD") and self._is_starter(p)]
+        cap_pool = attackers or [p for p in starting if self._start_score(p) > 0] or starting
+        captain = max(cap_pool, key=lambda x: (self._start_score(x), x.expected_points))
         remaining = [p for p in starting if p.player_id != captain.player_id]
-        vice_captain = max(remaining, key=lambda x: x.expected_points) if remaining else captain
+        vice_captain = max(remaining, key=lambda x: (self._start_score(x), x.expected_points)) if remaining else captain
         
         formation = self._get_formation(starting)
         xpts = sum(p.expected_points for p in starting) + captain.expected_points
@@ -151,9 +186,8 @@ class SquadOptimizer:
         for p in squad:
             by_pos[p.position].append(p)
         
-        # Sort each by expected points
         for pos in by_pos:
-            by_pos[pos].sort(key=lambda x: x.expected_points, reverse=True)
+            by_pos[pos].sort(key=lambda x: (self._start_score(x), x.expected_points), reverse=True)
         
         starting = []
         
@@ -176,7 +210,7 @@ class SquadOptimizer:
             by_pos["MID"][2:] + 
             by_pos["FWD"][1:]
         )
-        remaining.sort(key=lambda x: x.expected_points, reverse=True)
+        remaining.sort(key=lambda x: (self._start_score(x), x.expected_points), reverse=True)
         
         slots_left = 11 - len(starting)
         for p in remaining[:slots_left]:
@@ -205,43 +239,39 @@ class SquadOptimizer:
         
         recommendations = []
         
-        # Get current squad predictions
         current_preds = [
             self.predictions.predictions.get(pid)
             for pid in current_squad
             if pid in self.predictions.predictions
         ]
         current_preds = [p for p in current_preds if p is not None]
+
+        # Sell the least startable first (injured / benched), not the cheapest
+        current_preds.sort(key=lambda x: (self._start_score(x), x.expected_points_next_5))
         
-        # Find weak links (lowest expected points horizon by position)
-        current_preds.sort(key=lambda x: x.expected_points_next_5)
-        
-        # For each weak player, find a better replacement
-        for weak in current_preds[:5]:  # Check bottom 5
-            # Get team counts (excluding this player)
+        for weak in current_preds[:6]:
             team_counts = {}
             for p in current_preds:
                 if p.player_id != weak.player_id:
                     team_counts[p.team] = team_counts.get(p.team, 0) + 1
             
-            # Find replacements in same position
             replacements = [
                 p for p in self.predictions.predictions.values()
                 if p.position == weak.position
                 and p.player_id not in current_squad
+                and self._is_starter(p, allow_rotation=True)
+                and self._start_score(p) > self._start_score(weak) + 0.25
                 and p.expected_points_next_5 > weak.expected_points_next_5
                 and team_counts.get(p.team, 0) < self.MAX_PER_TEAM
                 and p.price <= weak.price + budget
-                and p.minutes_tag in ["Nailed", "unknown"]
-                and p.gw_multiplier > 0  # Hard-exclude BGW players for incoming transfers
             ]
             
             if replacements:
-                best = max(replacements, key=lambda x: x.expected_points_next_5)
+                best = max(replacements, key=lambda x: (self._start_score(x), x.expected_points_next_5))
                 points_gain_next_5 = best.expected_points_next_5 - weak.expected_points_next_5
                 points_gain = best.expected_points - weak.expected_points
                 
-                if points_gain_next_5 >= 2.0:  # Recommend if good horizon gain
+                if points_gain_next_5 >= 2.0:
                     recommendations.append(TransferRecommendation(
                         player_out_id=weak.player_id,
                         player_out_name=weak.player_name,
@@ -258,7 +288,10 @@ class SquadOptimizer:
                         points_gain=round(points_gain, 2),
                         points_gain_next_5=round(points_gain_next_5, 2),
                         price_change=round(best.price - weak.price, 1),
-                        reason=f"Higher Horizon xPts ({best.expected_points_next_5:.1f} vs {weak.expected_points_next_5:.1f} over next 5 GWs)."
+                        reason=(
+                            f"{best.player_name} is a nailed starter ({best.minutes_tag}, "
+                            f"{best.expected_points_next_5:.1f} vs {weak.expected_points_next_5:.1f} over 5 GWs)."
+                        )
                     ))
         
         # Sort by points gain horizon

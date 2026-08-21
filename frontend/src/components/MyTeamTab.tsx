@@ -1,4 +1,46 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+
+function PlayerSearch({ onPick, placeholder = 'Search player to replace…' }: any) {
+  const [q, setQ] = useState('')
+  const [hits, setHits] = useState<any[]>([])
+  useEffect(() => {
+    if (q.trim().length < 2) {
+      setHits([])
+      return
+    }
+    const t = setTimeout(async () => {
+      const res = await fetch(`/api/players?q=${encodeURIComponent(q.trim())}`)
+      const data = await res.json()
+      setHits(Array.isArray(data) ? data : [])
+    }, 220)
+    return () => clearTimeout(t)
+  }, [q])
+  return (
+    <div className="relative mt-2">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-surface-container-low border border-surface-container-high rounded px-2 py-1 text-xs font-body"
+      />
+      {hits.length > 0 && (
+        <div className="absolute z-20 mt-1 w-full max-h-40 overflow-y-auto bg-surface-container-lowest border border-surface-container-high rounded-lg shadow-lg">
+          {hits.map((h) => (
+            <button
+              key={h.id}
+              type="button"
+              onClick={() => { onPick(h); setQ(''); setHits([]) }}
+              className="w-full text-left px-3 py-2 text-xs hover:bg-surface-container-high flex justify-between gap-2"
+            >
+              <span className="font-bold truncate">{h.name}</span>
+              <span className="text-outline font-mono shrink-0">{h.position} {h.team} £{h.price}m {h.minutes_tag || ''}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function Spinner() {
   return (
@@ -94,6 +136,55 @@ export default function MyTeamTab() {
       setError('Failed to analyze team. Restart the Flask server if EasyOCR is downloading models.')
     }
     setAnalyzing(false)
+  }
+
+  const reanalyzeFromIds = async (ids: number[]) => {
+    if (ids.length < 1) return
+    setAnalyzing(true)
+    setError('')
+    try {
+      const res = await fetch('/api/upload-team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_ids: ids,
+          free_transfers: freeTransfers,
+          bank: bank === '' ? undefined : Number(bank),
+        }),
+      })
+      const data = await res.json()
+      if (data.error && !data.detected_players) {
+        setError(data.error)
+      } else {
+        if (data.error) setError(data.error)
+        setResults(data)
+      }
+    } catch {
+      setError('Could not refresh analysis after the edit.')
+    }
+    setAnalyzing(false)
+  }
+
+  const replaceSlot = (index: number, player: any) => {
+    const slots = results?.detected_players || []
+    const current = slots[index]
+    let ids = slots.filter((p) => p.matched && p.id).map((p) => p.id)
+    if (current?.matched && current.id) {
+      ids = ids.filter((id) => id !== current.id)
+    }
+    if (!ids.includes(player.id)) ids.push(player.id)
+    reanalyzeFromIds(ids)
+  }
+
+  const removeSlot = (id: number) => {
+    const ids = (results?.detected_players || []).filter((p) => p.matched && p.id && p.id !== id).map((p) => p.id)
+    reanalyzeFromIds(ids)
+  }
+
+  const addPlayer = (player: any) => {
+    const ids = (results?.detected_players || []).filter((p) => p.matched && p.id).map((p) => p.id)
+    if (!ids.includes(player.id)) ids.push(player.id)
+    reanalyzeFromIds(ids)
   }
 
   const resetUpload = () => {
@@ -275,19 +366,34 @@ export default function MyTeamTab() {
 
               {results.detected_players?.length > 0 && (
                 <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-6">
-                  <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface mb-4">Detected squad</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  <h3 className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface mb-2">Detected squad</h3>
+                  <p className="text-sm text-outline mb-4">Wrong OCR match? Search and replace that slot, then analysis refreshes with nailed-starter transfers.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {results.detected_players.map((p, i) => (
-                      <div key={i} className={`p-3 rounded-lg border ${p.matched ? 'border-surface-container-high' : 'border-red-500/40 bg-red-500/5'}`}>
-                        <div className="font-label text-[9px] uppercase tracking-widest text-outline">{p.matched ? p.position : 'unmatched'}</div>
-                        <div className="font-headline font-bold text-sm truncate">{p.name}</div>
-                        {p.matched ? (
-                          <div className="font-mono text-[10px] text-outline">{p.team} · £{p.price}m · {p.xPts} xPts</div>
-                        ) : (
-                          <div className="text-[10px] text-red-500">OCR: {p.raw_text}</div>
-                        )}
+                      <div key={`${p.id}-${i}`} className={`p-3 rounded-lg border ${p.matched ? 'border-surface-container-high' : 'border-red-500/40 bg-red-500/5'}`}>
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <div className="font-label text-[9px] uppercase tracking-widest text-outline">
+                              {p.matched ? `${p.position} · ${p.minutes_tag || ''}` : 'unmatched'}
+                            </div>
+                            <div className="font-headline font-bold text-sm truncate">{p.name}</div>
+                            {p.matched ? (
+                              <div className="font-mono text-[10px] text-outline">{p.team} · £{p.price}m · {p.xPts} xPts</div>
+                            ) : (
+                              <div className="text-[10px] text-red-500">OCR: {p.raw_text}</div>
+                            )}
+                          </div>
+                          {p.matched && (
+                            <button type="button" onClick={() => removeSlot(p.id)} className="text-[10px] uppercase tracking-widest text-outline hover:text-red-500">Remove</button>
+                          )}
+                        </div>
+                        <PlayerSearch onPick={(hit) => replaceSlot(i, hit)} placeholder={p.matched ? 'Replace…' : 'Match this name…'} />
                       </div>
                     ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-surface-container-high">
+                    <div className="font-label text-[10px] uppercase tracking-widest text-outline mb-2">Add a missing player</div>
+                    <PlayerSearch onPick={addPlayer} placeholder="Type a web name (Salah, Palmer…)" />
                   </div>
                 </div>
               )}
@@ -327,7 +433,7 @@ export default function MyTeamTab() {
                               'bg-surface-container-lowest border-surface-container-high'
                           }`}>
                           <div className="flex justify-between items-center mb-2">
-                            <span className="font-label text-[9px] uppercase tracking-widest text-outline">{p.position}</span>
+                            <span className="font-label text-[9px] uppercase tracking-widest text-outline">{p.position}{p.minutes_tag ? ` · ${p.minutes_tag}` : ''}</span>
                             {(p.is_captain || p.is_vice) && (
                                <span className="font-headline font-black text-xs">{p.is_captain ? 'C' : 'V'}</span>
                             )}
@@ -367,6 +473,7 @@ export default function MyTeamTab() {
                              <div className="font-label text-[10px] text-emerald-500 uppercase tracking-widest mb-1">Transfer In</div>
                              <div className="font-headline font-bold text-on-surface">{t.in.name}</div>
                              <div className="font-mono text-[10px] text-outline mt-1">{t.in.team} • £{t.in.price}M</div>
+                             {t.reason && <div className="font-body text-[10px] text-outline mt-2 col-span-2">{t.reason}</div>}
                            </div>
                         </div>
                         <div className="flex gap-6 items-center flex-shrink-0">

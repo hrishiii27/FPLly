@@ -68,10 +68,13 @@ class OwnershipAnalyzer:
         
         # Get xPts if predictor available
         xpts = 0.0
+        minutes_ok = True
         if self.predictor and player.id in self.predictor.predictions:
-            xpts = self.predictor.predictions[player.id].expected_points
+            pred = self.predictor.predictions[player.id]
+            xpts = pred.expected_points
+            minutes_ok = pred.minutes_tag == "Nailed" and pred.gw_multiplier > 0
         
-        is_essential = ownership >= 30.0 and xpts >= 4.5
+        is_essential = ownership >= 30.0 and xpts >= 4.5 and minutes_ok
         eo_risk, _reason = self._calculate_eo_risk(ownership, xpts, is_essential)
         
         return OwnershipAnalysis(

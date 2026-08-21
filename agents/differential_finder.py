@@ -29,7 +29,7 @@ class DifferentialFinder:
     """Agent for finding low-owned high-value players."""
     
     MAX_OWNERSHIP = 10.0  # Max 10% for differential
-    MIN_XPTS = 3.5  # Min expected points
+    MIN_XPTS = 4.0  # Nailed starters only; skip speculative kids
     
     def __init__(self, data_agent: FPLDataIngestion, predictor: PointsPredictionAgent):
         self.data = data_agent
@@ -54,9 +54,13 @@ class DifferentialFinder:
             prediction = self.predictor.predictions.get(player.id)
             if not prediction or prediction.expected_points < min_pts:
                 continue
-            if prediction.minutes_tag in ("Injured", "Suspended", "Minutes-Managed"):
+            if prediction.minutes_tag in ("Injured", "Suspended"):
                 continue
-            if ownership < 0.4:
+            if prediction.gw_multiplier <= 0:
+                continue
+            if ownership < 1.5:
+                continue
+            if player.price < 4.5:
                 continue
             
             diff = self._create_differential(player, prediction)

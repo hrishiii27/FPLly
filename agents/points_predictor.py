@@ -343,20 +343,17 @@ class PointsPredictionAgent:
         """Get top captain picks (highest ceiling upside)."""
         preds = [
             p for p in self.predictions.values()
-            if p.minutes_tag in ["Nailed", "unknown", "Rotation Risk"]
-            and p.confidence >= 45
-            and p.gw_multiplier > 0
+            if p.gw_multiplier > 0
             and p.position in ("MID", "FWD")
+            and p.minutes_tag not in ("Injured", "Suspended")
+            and p.expected_points >= 3.0
         ]
-        if len(preds) < n:
-            preds = [
-                p for p in self.predictions.values()
-                if p.gw_multiplier > 0 and p.minutes_tag not in ("Injured", "Suspended")
-            ]
-        
+        own = {pl.id: pl.selected_by_percent for pl in self.data.players}
         return sorted(
             preds,
-            key=lambda x: x.expected_points * 1.4 + x.expected_points_high * 0.6,
+            key=lambda x: (
+                x.expected_points * 1.4 + x.expected_points_high * 0.5 + 0.02 * own.get(x.player_id, 0)
+            ),
             reverse=True
         )[:n]
     

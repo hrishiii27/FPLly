@@ -63,6 +63,23 @@ class PlayerFormAgent:
         xg_per_90 = player.expected_goals / minutes_90 if minutes_90 > 0 else 0
         xa_per_90 = player.expected_assists / minutes_90 if minutes_90 > 0 else 0
         xgi_per_90 = player.expected_goal_involvements / minutes_90 if minutes_90 > 0 else 0
+
+        # Early season: recorded xG is ~0 for everyone. Scale a positional prior by price
+        # so £15m forwards are not tied with £6.5 squad fillers.
+        if player.minutes < 180 and player.expected_goals <= 0.05:
+            price = player.price
+            if player.position == "FWD":
+                xg_per_90 = 0.12 + max(0.0, price - 5.5) * 0.07
+                xa_per_90 = 0.06 + max(0.0, price - 5.5) * 0.015
+            elif player.position == "MID":
+                xg_per_90 = 0.08 + max(0.0, price - 5.0) * 0.05
+                xa_per_90 = 0.10 + max(0.0, price - 5.0) * 0.03
+            elif player.position == "DEF":
+                xg_per_90 = 0.03 + max(0.0, price - 4.5) * 0.025
+                xa_per_90 = 0.04 + max(0.0, price - 4.5) * 0.02
+            else:
+                xg_per_90, xa_per_90 = 0.0, 0.01
+            xgi_per_90 = xg_per_90 + xa_per_90
         
         # Integrate Short-Term Underlying Form (last 4 matches) if available
         history = getattr(self, "player_histories", {}).get(player.id, [])

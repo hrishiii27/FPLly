@@ -245,27 +245,29 @@ class ChipAdvisor:
         # Evaluate Bench Boost using actual bench from Best XI
         bench_ids = [pid for pid in squad_ids if pid not in xi_ids]
         bench_preds = [prediction_agent.predictions[pid] for pid in bench_ids if pid in prediction_agent.predictions]
-        bench_pts = sum(p.expected_points for p in bench_preds)
+        playable_bench = [p for p in bench_preds if p.minutes_tag not in ("Injured", "Suspended") and p.gw_multiplier > 0]
+        bench_pts = sum(p.expected_points for p in playable_bench)
         
-        bb_score = min(95, int((bench_pts / 12.0) * 80))
-        if len(squad_ids) >= 14 and bb_score >= 40:
+        bb_score = min(95, int((bench_pts / 12.0) * 80)) if playable_bench else 0
+        if len(squad_ids) >= 14 and bb_score >= 40 and len(playable_bench) >= 3:
             suggestions.append({
                 "chip": "Bench Boost",
                 "score": bb_score,
-                "reason": "Calculated based on your specific uploaded bench xPts.",
-                "for_your_team": f"Your bench has ~{bench_pts:.1f} xPts - {'Excellent for BB!' if bench_pts > 12 else 'Good for BB!' if bench_pts > 8 else 'Consider strengthening bench'}"
+                "reason": f"{len(playable_bench)} available bench players.",
+                "for_your_team": f"Bench ~{bench_pts:.1f} xPts — {'BB this week' if bench_pts > 10 else 'bench still a bit thin'}"
             })
                 
         # Evaluate Triple Captain using Best XI captain
         valid_squad = [prediction_agent.predictions[pid] for pid in squad_ids if pid in prediction_agent.predictions]
         if valid_squad:
-            best_cap = max(valid_squad, key=lambda p: p.expected_points)
+            caps = [p for p in valid_squad if p.position in ("MID", "FWD") and p.gw_multiplier > 0 and p.minutes_tag not in ("Injured", "Suspended")]
+            best_cap = max(caps or valid_squad, key=lambda p: p.expected_points)
             tc_score = min(95, int((best_cap.expected_points / 8.0) * 80))
-            if tc_score >= 40:
+            if tc_score >= 50:
                 suggestions.append({
                     "chip": "Triple Captain",
                     "score": tc_score,
-                    "reason": "Calculated based on your highest predicted player.",
+                    "reason": f"High ceiling TC on {best_cap.player_name}.",
                     "for_your_team": f"TC on {best_cap.player_name} ({best_cap.expected_points:.1f} xPts) yields ~{best_cap.expected_points*3:.1f} pts"
                 })
             
@@ -277,7 +279,7 @@ class ChipAdvisor:
             # Wildcard logic based on squad health over next 5 GWs
             weak_links = 0
             for p in valid_squad:
-                if p.minutes_tag in ["Out", "Suspended"] or p.expected_points_next_5 < 10.0:
+                if p.minutes_tag in ("Injured", "Suspended", "Minutes-Managed") or p.expected_points_next_5 < 10.0:
                     weak_links += 1
             
             wc_global = current_analysis.chip_scores.get("wildcard", 0)

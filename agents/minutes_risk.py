@@ -51,6 +51,23 @@ class MinutesRiskAgent:
         # Games completed this season (0 at the GW1 deadline)
         self.games_played = max(self.data.current_gw - 1, 0)
     
+    def _effective_chance(self, player: Player) -> int:
+        """FPL often stores 0/null chance with no news — that is not 'won't play'."""
+        raw = player.chance_of_playing
+        news = (player.news or "").strip()
+        if player.status == "i":
+            return int(raw) if raw is not None else 0
+        if player.status == "s":
+            return 0
+        if player.status == "d":
+            return int(raw) if raw is not None else 50
+        # status == available (and similar)
+        if raw is None:
+            return 100
+        if raw == 0 and not news:
+            return 100
+        return int(raw)
+
     def analyze_player(self, player: Player) -> MinutesAnalysis:
         """Analyze minutes risk for a player."""
         
@@ -58,30 +75,31 @@ class MinutesRiskAgent:
         starts_approx = int(matches_approx * 0.9)
         denom = max(self.games_played, 1)
         minutes_per_match = player.minutes / denom if self.games_played else 0
+        chance = self._effective_chance(player)
+        news = (player.news or "").strip()
+        template = player.selected_by_percent >= 10 or player.price >= 8.0
         
         if player.status == "i":
             expected_minutes = 0
             tag = "Injured"
-            chance = player.chance_of_playing or 0
         elif player.status == "s":
             expected_minutes = 0
             tag = "Suspended"
-            chance = 0
-        elif player.status != "a":
+        elif player.status not in ("a", "d"):
             expected_minutes = 0
             tag = "Unknown"
-            chance = player.chance_of_playing or 0
         else:
-            chance = player.chance_of_playing if player.chance_of_playing is not None else 100
-            
             if self.games_played == 0 and player.minutes == 0:
-                # Pre-season / GW1: no minutes yet — use price & ownership as a starter prior
-                if chance >= 75 and (player.selected_by_percent >= 8 or player.price >= 6.0):
+                # GW1: ownership/price is the only real signal of who starts
+                if template or player.selected_by_percent >= 8 or player.price >= 6.5:
                     expected_minutes = 85
                     tag = "Nailed"
-                elif chance >= 75 and player.price >= 4.5:
-                    expected_minutes = 70
-                    tag = "Nailed" if player.selected_by_percent >= 3 else "Rotation Risk"
+                elif player.price >= 4.5 and player.selected_by_percent >= 2:
+                    expected_minutes = 75
+                    tag = "Nailed"
+                elif player.price >= 4.5:
+                    expected_minutes = 60
+                    tag = "Rotation Risk"
                 else:
                     expected_minutes = 45
                     tag = "Rotation Risk"
@@ -100,11 +118,20 @@ class MinutesRiskAgent:
             else:
                 expected_minutes = 20
                 tag = "Minutes-Managed"
-            
+                if template:
+                    expected_minutes = 75
+                    tag = "Nailed"
+
+            # Soft-weight doubts. Do not re-tag Haaland-level players as unused.
             if chance < 100:
-                expected_minutes *= (chance / 100)
-                if chance <= 50:
-                    tag = "Injured" if "injury" in (player.news or "").lower() else "Minutes-Managed"
+                expected_minutes *= max(chance, 50) / 100
+            if chance <= 25 and news:
+                tag = "Injured" if "injur" in news.lower() or "knock" in news.lower() else "Minutes-Managed"
+                expected_minutes = min(expected_minutes, 20)
+            elif chance <= 50 and news and not template:
+                tag = "Rotation Risk"
+            elif player.status == "d" and not template:
+                tag = "Rotation Risk"
         
         low = max(0, expected_minutes - 20)
         high = min(90, expected_minutes + 15)

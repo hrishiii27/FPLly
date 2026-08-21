@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown'
 export default function ScoutChat() {
     const [isOpen, setIsOpen] = useState(false)
     const [messages, setMessages] = useState([
-        { role: 'bot', text: "👋 Initialize connection.\n\nQuery parameters available:\n- 🎯 **Captaincy Analysis**\n- 🔄 **Transfer Optimization**\n- 📈 **Differential Hunting**" }
+        { role: 'bot', text: "Scout is a **stats router** (not ChatGPT). Ask:\n- **Who should I captain?**\n- **Who should I transfer in?**\n- **Best differentials**\n- **Chips** / a **player name**" }
     ])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)

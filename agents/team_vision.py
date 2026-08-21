@@ -88,18 +88,34 @@ class TeamVisionAgent:
 
     def _rebuild_lookups(self):
         self.player_by_web = {p.web_name.lower(): p for p in self.data.players}
+        self.team_codes = {t.short_name.lower() for t in self.data.teams.values()}
         self.labels = []
         self.label_to_player: dict[str, Player] = {}
+        surname_hits: dict[str, int] = {}
         for p in self.data.players:
-            names = {
-                p.web_name,
-                p.second_name,
-                f"{p.first_name} {p.second_name}".strip(),
-                f"{p.first_name[0]}.{p.second_name}" if p.first_name else "",
-            }
+            sn = (p.second_name or "").strip().lower()
+            if sn:
+                surname_hits[sn] = surname_hits.get(sn, 0) + 1
+        common = {"lee", "james", "lewis", "wilson", "johnson", "jones", "brown", "smith",
+                  "anderson", "murphy", "kelly", "silva", "gomez", "sanchez", "marshall",
+                  "robinson", "taylor", "williams", "thomas", "martin", "white", "king",
+                  "young", "hall", "green", "clark", "wright", "scott", "adams", "baker",
+                  "nelson", "carter", "mitchell", "perez", "roberts", "turner", "phillips",
+                  "campbell", "parker", "evans", "edwards", "collins", "stewart", "morris",
+                  "rogers", "reed", "cook", "morgan", "bell", "murphy"}
+
+        for p in self.data.players:
+            names = {p.web_name, f"{p.first_name} {p.second_name}".strip()}
+            if p.first_name:
+                names.add(f"{p.first_name[0]}.{p.second_name}")
+            sn = (p.second_name or "").strip()
+            if sn and len(sn) >= 5 and sn.lower() not in common and surname_hits.get(sn.lower(), 0) == 1:
+                names.add(sn)
             for name in names:
                 key = (name or "").strip()
-                if len(key) < 2:
+                if len(key) < 3:
+                    continue
+                if key.lower() in self.team_codes:
                     continue
                 self.labels.append(key)
                 self.label_to_player[key.lower()] = p
@@ -146,6 +162,10 @@ class TeamVisionAgent:
                 continue
             clean = re.sub(r"[^\w\s\-\'.]", "", text).strip(" .-'")
             clean = re.sub(r"\b[CV]\b", "", clean).strip()
+            if clean.lower() in getattr(self, "team_codes", set()):
+                continue
+            if len(clean) <= 3 and clean.isupper():
+                continue
             if len(clean) < 2 or clean.isdigit():
                 continue
             tokens.append(clean)
@@ -164,29 +184,54 @@ class TeamVisionAgent:
                 merged.append(tok)
         return merged
 
-    def match_player(self, name: str, threshold: int = 72) -> DetectedPlayer:
+    def match_player(self, name: str, threshold: int = 80) -> DetectedPlayer:
         needle = name.strip()
         if not needle:
             return DetectedPlayer(needle, "", 0, 0, False)
+        if needle.lower() in getattr(self, "team_codes", set()):
+            return DetectedPlayer(needle, "", 0, 0, False)
 
-        exact = self.player_by_web.get(needle.lower()) or self.label_to_player.get(needle.lower())
+        exact = self.player_by_web.get(needle.lower())
         if exact:
             return self._from_player(needle, exact, 100)
 
-        min_threshold = 82 if len(needle) <= 4 else threshold
+        min_threshold = 90 if len(needle) <= 4 else threshold
         result = process.extractOne(needle, self.labels, scorer=fuzz.token_set_ratio)
         if result and result[1] >= min_threshold:
             player = self.label_to_player.get(result[0].lower())
-            if player:
+            if player and self._plausible_match(needle, result[0], result[1]):
                 return self._from_player(needle, player, result[1])
 
-        result = process.extractOne(needle, self.labels, scorer=fuzz.partial_ratio)
-        if result and result[1] >= max(min_threshold, 85):
-            player = self.label_to_player.get(result[0].lower())
-            if player:
-                return self._from_player(needle, player, result[1] - 5)
+        if len(needle) >= 6:
+            result = process.extractOne(needle, self.labels, scorer=fuzz.ratio)
+            if result and result[1] >= 88:
+                player = self.label_to_player.get(result[0].lower())
+                if player:
+                    return self._from_player(needle, player, result[1])
 
         return DetectedPlayer(needle, "", 0, 0, False)
+
+    def search_players(self, query: str, limit: int = 12) -> list[Player]:
+        q = (query or "").strip().lower()
+        if len(q) < 2:
+            return []
+        scored = []
+        for p in self.data.players:
+            blob = f"{p.web_name} {p.first_name} {p.second_name} {p.team_name}".lower()
+            if q not in blob:
+                continue
+            rank = 0 if p.web_name.lower().startswith(q) else 1
+            scored.append((rank, p.web_name.lower(), p))
+        scored.sort()
+        return [p for _, __, p in scored[:limit]]
+
+    def _plausible_match(self, raw: str, label: str, score: int) -> bool:
+        if score >= 95:
+            return True
+        a, b = raw.lower(), label.lower()
+        if a in b or b in a:
+            return len(a) >= 4
+        return score >= 85
 
     def _from_player(self, raw: str, player: Player, confidence: int) -> DetectedPlayer:
         return DetectedPlayer(
