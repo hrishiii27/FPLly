@@ -30,3 +30,6 @@ data/ml_ensemble.joblib
 
 # Artifacts
 .gemini/
+.cursor/
+.agents/
+skills-lock.json

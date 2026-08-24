@@ -46,6 +46,14 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Vite proxies `/api` to `127.0.0.1:5050` (3 minute timeout so first EasyOCR / ML train can finish).
 
+**Review UI (v2, port 3001)** — parallel night-match redesign in `frontend-v2/` (does not replace `frontend/`):
+
+```bash
+cd frontend-v2 && npm install && npm run dev
+```
+
+Open [http://localhost:3001](http://localhost:3001). Same API proxy.
+
 First ML train downloads five seasons of `merged_gw.csv` plus fixtures into `data/historical_cache/` (~1–2 minutes), then writes `data/ml_ensemble.joblib`. Later starts reuse the cache.
 
 ---
