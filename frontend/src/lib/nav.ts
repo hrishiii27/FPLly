@@ -27,16 +27,6 @@ export type TabId =
   | 'historical'
   | 'leagues'
 
-export const NAV_PRIMARY: { id: TabId; label: string }[] = [
-  { id: 'predictions', label: 'Predictions' },
-  { id: 'myteam', label: 'Squad' },
-  { id: 'optimal', label: 'Optimal XI' },
-  { id: 'captain', label: 'Captain' },
-  { id: 'ml', label: 'ML' },
-]
-
-const PRIMARY_IDS = new Set(NAV_PRIMARY.map((i) => i.id))
-
 export const NAV_GROUPS: { label: string; items: { id: TabId; label: string; icon: typeof LayoutDashboard }[] }[] = [
   {
     label: 'Matchweek',
@@ -65,7 +55,7 @@ export const NAV_GROUPS: { label: string; items: { id: TabId; label: string; ico
   {
     label: 'Models',
     items: [
-      { id: 'ml', label: 'ML holdout', icon: Cpu },
+      { id: 'ml', label: 'ML', icon: Cpu },
       { id: 'historical', label: 'History', icon: History },
     ],
   },
@@ -75,12 +65,9 @@ export const NAV_GROUPS: { label: string; items: { id: TabId; label: string; ico
   },
 ]
 
-export const SIDEBAR_GROUPS = NAV_GROUPS.map((group) => ({
-  ...group,
-  items: group.items.filter((item) => !PRIMARY_IDS.has(item.id)),
-})).filter((group) => group.items.length > 0)
+export const NAV_BAR = NAV_GROUPS.flatMap((group) => group.items.map(({ id, label }) => ({ id, label })))
 
-const TAB_SET = new Set(NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id)))
+const TAB_SET = new Set(NAV_BAR.map((i) => i.id))
 
 export function tabFromHash(): TabId {
   const id = window.location.hash.replace(/^#/, '') as TabId

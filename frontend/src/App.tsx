@@ -1,211 +1,135 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-
-// Components
-import Sidebar from './components/Sidebar'
-import PredictionsTab from './components/PredictionsTab'
-import CaptainTab from './components/CaptainTab'
-import OptimalTeamTab from './components/OptimalTeamTab'
-import FixturesTab from './components/FixturesTab'
-import MyTeamTab from './components/MyTeamTab'
-import HistoricalTab from './components/HistoricalTab'
-import ChipsTab from './components/ChipsTab'
-import OwnershipTab from './components/OwnershipTab'
-import DifferentialsTab from './components/DifferentialsTab'
-import MLTab from './components/MLTab'
-import LeagueTab from './components/LeagueTab'
-import ScoutChat from './components/ScoutChat'
+import { useEffect, useState } from 'react'
+import { Menu, Moon, Sun } from 'lucide-react'
+import Sidebar from './components/layout/Sidebar'
+import MobileNav from './components/layout/MobileNav'
+import ScoutPanel from './components/layout/ScoutPanel'
 import ErrorBoundary from './components/ErrorBoundary'
+import Dashboard from './pages/Dashboard'
+import Predictions from './pages/Predictions'
+import Captain from './pages/Captain'
+import OptimalXi from './pages/OptimalXi'
+import Fixtures from './pages/Fixtures'
+import Squad from './pages/Squad'
+import Historical from './pages/Historical'
+import Chips from './pages/Chips'
+import Ownership from './pages/Ownership'
+import Differentials from './pages/Differentials'
+import MlHoldout from './pages/MlHoldout'
+import Leagues from './pages/Leagues'
+import { api } from './lib/api'
+import { NAV_BAR, tabFromHash, setTabHash, type TabId } from './lib/nav'
 
-function App() {
-  const [activeTab, setActiveTab] = useState('predictions')
+export default function App() {
+  const [activeTab, setActiveTabState] = useState<TabId>(() => (typeof window !== 'undefined' ? tabFromHash() : 'predictions'))
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [status, setStatus] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
   const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') || 'dark'
-    }
-    return 'dark'
+    if (typeof window === 'undefined') return 'light'
+    return localStorage.getItem('fplly-theme') || localStorage.getItem('fplly-v2-theme') || 'light'
   })
 
-  // Theme Effect
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('theme', theme)
-  }, [theme])
-
-  // Status Fetch
-  useEffect(() => {
-    async function fetchStatus() {
-      try {
-        const res = await fetch('/api/status')
-        const data = await res.json()
-        setStatus(data)
-        setLoading(false)
-      } catch (error) {
-        console.error('Failed to fetch status:', error)
-        setLoading(false)
-      }
-    }
-    fetchStatus()
-  }, [])
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+  const setActiveTab = (id: TabId) => {
+    setActiveTabState(id)
+    setTabHash(id)
   }
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('fplly-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    api.status().then(setStatus).catch(() => setStatus({ status: 'offline' }))
+  }, [])
+
+  useEffect(() => {
+    const onHash = () => setActiveTabState(tabFromHash())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
   return (
-    <div className="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container min-h-screen">
-      
-      {/* TopNavBar */}
-      <header className="docked full-width top-0 sticky z-40 bg-surface">
-        <div className="flex justify-between items-center px-4 md:px-8 py-4 w-full max-w-screen-2xl mx-auto">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="md:hidden font-label p-2 border border-surface-container-high rounded bg-surface">
-              <span className="material-symbols-outlined text-on-surface tracking-normal">menu</span>
+    <div className="min-h-screen text-foreground font-body">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] bg-primary text-on-primary px-3 py-2 rounded-lg">
+        Skip to content
+      </a>
+
+      <header className="sticky top-0 z-40 min-h-16 glass-nav">
+        <div className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[minmax(7rem,1fr)_auto_minmax(7rem,1fr)] items-center gap-3 px-4 md:px-6 py-1.5 max-w-[1600px] mx-auto">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              className="md:hidden min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-border/60 cursor-pointer"
+              aria-label="Open menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={18} />
             </button>
-            <div className="text-2xl font-black tracking-tighter text-on-surface font-headline cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-              FPLly Analysis
-            </div>
+            <button type="button" onClick={() => setActiveTab('dashboard')} className="font-headline text-xl font-extrabold tracking-tight cursor-pointer">
+              FPLly
+            </button>
           </div>
-          
-          <nav className="hidden md:flex items-center gap-8">
-            <button onClick={() => setActiveTab('predictions')} className={`font-body font-medium transition-colors ${activeTab === 'predictions' ? 'text-primary font-bold border-b-2 border-primary pb-1' : 'text-on-surface hover:text-primary'}`}>Predictions</button>
-            <button onClick={() => setActiveTab('optimal')} className={`font-body font-medium transition-colors ${activeTab === 'optimal' ? 'text-primary font-bold border-b-2 border-primary pb-1' : 'text-on-surface hover:text-primary'}`}>Transfers</button>
-            <button onClick={() => setActiveTab('captain')} className={`font-body font-medium transition-colors ${activeTab === 'captain' ? 'text-primary font-bold border-b-2 border-primary pb-1' : 'text-on-surface hover:text-primary'}`}>Strategy</button>
-            <button onClick={() => setActiveTab('ml')} className={`font-body font-medium transition-colors ${activeTab === 'ml' ? 'text-primary font-bold border-b-2 border-primary pb-1' : 'text-on-surface hover:text-primary'}`}>Analytics</button>
+          <nav className="hidden md:flex items-center justify-center gap-0.5 flex-wrap" aria-label="Primary">
+            {NAV_BAR.map((item) => {
+              const current = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveTab(item.id)}
+                  aria-current={current ? 'page' : undefined}
+                  className={`min-h-11 px-2.5 rounded-lg text-sm font-headline font-bold cursor-pointer whitespace-nowrap transition-colors duration-200 ${
+                    current ? 'bg-primary text-on-primary' : 'text-foreground hover:bg-muted/70'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              )
+            })}
           </nav>
-
-          <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high text-secondary text-xs font-semibold uppercase tracking-widest font-label">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-              {loading ? 'Connecting' : status?.status === 'ready' ? `GW${status?.next_gw} Ready${status?.ml_ready ? ' · ML' : ''}` : 'Offline'}
-            </div>
-
-            <button onClick={toggleTheme} className="p-2 hover:bg-surface-container-high rounded-full transition-colors flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-surface tracking-normal">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
-            </button>
-            
-            <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors hidden sm:flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-surface tracking-normal">settings</span>
+          <div className="flex items-center justify-end gap-3">
+            <p className="hidden sm:flex items-center gap-2 font-label text-[11px] font-medium text-muted-fg">
+              <span className={`h-1.5 w-1.5 rounded-full ${status?.status === 'ready' ? 'bg-secondary' : 'bg-muted-fg'}`} aria-hidden />
+              {status?.status === 'ready'
+                ? `GW${status?.next_gw} live${status?.ml_ready ? ' · ML' : ''}`
+                : status
+                  ? 'API offline'
+                  : 'Connecting'}
+            </p>
+            <button
+              type="button"
+              onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+              className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg cursor-pointer hover:bg-muted/70"
+              aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
         </div>
-        <div className="bg-surface-container-high h-[1px] w-full"></div>
       </header>
 
-      <div className="flex min-h-screen">
-        {/* SideNavBar */}
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-
-        {/* Main Content */}
-        <main className="md:ml-64 w-full p-4 md:p-8 max-w-screen-2xl mb-20 md:mb-0">
-          <AnimatePresence mode="wait">
-            <ErrorBoundary key={activeTab}>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="w-full"
-              >
-                {activeTab === 'dashboard' && <SimpleDashboard status={status} setActiveTab={setActiveTab} />}
-                {activeTab === 'myteam' && <MyTeamTab />}
-                {activeTab === 'predictions' && <PredictionsTab />}
-                {activeTab === 'captain' && <CaptainTab />}
-                {activeTab === 'optimal' && <OptimalTeamTab />}
-                {activeTab === 'fixtures' && <FixturesTab />}
-                {activeTab === 'chips' && <ChipsTab />}
-                {activeTab === 'ownership' && <OwnershipTab />}
-                {activeTab === 'differentials' && <DifferentialsTab />}
-                {activeTab === 'ml' && <MLTab />}
-                {activeTab === 'leagues' && <LeagueTab />}
-                {activeTab === 'historical' && <HistoricalTab />}
-              </motion.div>
-            </ErrorBoundary>
-          </AnimatePresence>
+      <div className="flex min-h-[calc(100vh-4rem)]">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <main id="main" className="w-full p-4 md:p-8 max-w-[1400px] mx-auto mb-24 md:mb-0 min-w-0">
+          <ErrorBoundary key={activeTab}>
+            {activeTab === 'dashboard' && <Dashboard status={status} setActiveTab={setActiveTab} />}
+            {activeTab === 'myteam' && <Squad />}
+            {activeTab === 'predictions' && <Predictions />}
+            {activeTab === 'captain' && <Captain />}
+            {activeTab === 'optimal' && <OptimalXi />}
+            {activeTab === 'fixtures' && <Fixtures />}
+            {activeTab === 'chips' && <Chips />}
+            {activeTab === 'ownership' && <Ownership />}
+            {activeTab === 'differentials' && <Differentials />}
+            {activeTab === 'ml' && <MlHoldout />}
+            {activeTab === 'leagues' && <Leagues />}
+            {activeTab === 'historical' && <Historical />}
+          </ErrorBoundary>
         </main>
       </div>
 
-      {/* Mobile Nav Shell - Persistent for smaller screens */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest border-t border-surface-container-high z-50 flex justify-around py-4 pb-safe">
-        <button onClick={() => setActiveTab('predictions')} className={`flex flex-col items-center gap-1 ${activeTab==='predictions' ? 'text-primary' : 'text-outline hover:text-on-surface'}`}>
-          <span className="material-symbols-outlined tracking-normal">analytics</span>
-          <span className="text-[10px] font-label uppercase">Stats</span>
-        </button>
-        <button onClick={() => setActiveTab('myteam')} className={`flex flex-col items-center gap-1 ${activeTab==='myteam' ? 'text-primary' : 'text-outline hover:text-on-surface'}`}>
-          <span className="material-symbols-outlined tracking-normal">groups</span>
-          <span className="text-[10px] font-label uppercase">Team</span>
-        </button>
-        <button onClick={() => setActiveTab('optimal')} className={`flex flex-col items-center gap-1 ${activeTab==='optimal' ? 'text-primary' : 'text-outline hover:text-on-surface'}`}>
-          <span className="material-symbols-outlined tracking-normal">auto_fix</span>
-          <span className="text-[10px] font-label uppercase">Picks</span>
-        </button>
-        <button onClick={() => setSidebarOpen(true)} className={`flex flex-col items-center gap-1 text-outline hover:text-on-surface`}>
-          <span className="material-symbols-outlined tracking-normal">menu</span>
-          <span className="text-[10px] font-label uppercase">More</span>
-        </button>
-      </div>
-
-      {/* Persistent global components */}
-      <ScoutChat />
+      <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} onMore={() => setSidebarOpen(true)} />
+      <ScoutPanel />
     </div>
   )
 }
-
-function SimpleDashboard({ status, setActiveTab }: any) {
-  const [dash, setDash] = useState<any>(null)
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch('/api/dashboard')
-        setDash(await res.json())
-      } catch (e) {
-        console.error('Dashboard fetch failed', e)
-      }
-    }
-    load()
-  }, [])
-
-  return (
-    <div className="py-12 flex flex-col items-center text-center">
-      <h1 className="font-headline text-5xl md:text-7xl font-black text-on-surface leading-[0.9] tracking-tighter mb-6">
-        FPLly <span className="text-primary italic">DASHBOARD</span>
-      </h1>
-      <p className="mt-2 text-lg text-outline font-body leading-relaxed max-w-xl mx-auto mb-10">
-        Models are online for GW{status?.next_gw}. Forecasts blend rules with a lagged ensemble (including FDR).
-      </p>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mb-10 text-left">
-        <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-5">
-          <p className="font-label text-[10px] uppercase tracking-widest text-outline mb-2">Hot form</p>
-          <p className="font-headline text-2xl font-bold">{dash?.top_form?.name || '—'}</p>
-          <p className="text-sm text-outline">{dash?.top_form?.team} · form {dash?.top_form?.form ?? '—'}</p>
-        </div>
-        <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-5">
-          <p className="font-label text-[10px] uppercase tracking-widest text-outline mb-2">Next-GW MAE</p>
-          <p className="font-headline text-2xl font-bold">{dash?.mae ?? (status?.ml_mae ?? 'Train ML tab')}</p>
-          <p className="text-sm text-outline">
-            {dash?.forecast_skill != null ? `${dash.forecast_skill}% better than guessing the mean` : 'Open Analytics once to train'}
-          </p>
-        </div>
-        <div className="bg-surface-container-lowest border border-surface-container-high rounded-xl p-5">
-          <p className="font-label text-[10px] uppercase tracking-widest text-outline mb-2">Top xPts</p>
-          <p className="font-headline text-2xl font-bold">{dash?.top_predictions?.[0]?.name || '—'}</p>
-          <p className="text-sm text-outline">{dash?.top_predictions?.[0]?.xpts != null ? `${dash.top_predictions[0].xpts} xPts` : '—'}</p>
-        </div>
-      </div>
-
-      <button 
-        onClick={() => setActiveTab('predictions')}
-        className="bg-primary text-on-primary font-headline py-4 px-8 rounded-full flex items-center justify-center gap-2 hover:opacity-90 transition-all text-lg cursor-pointer"
-      >
-        Explore Intel <span className="material-symbols-outlined tracking-normal">arrow_forward</span>
-      </button>
-    </div>
-  )
-}
-
-export default App
